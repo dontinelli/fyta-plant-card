@@ -3,28 +3,108 @@ Custom card to display information of [Fyta plants](https://fyta.de/) on your Ho
 
 You will need the [Fyta integration](https://www.home-assistant.io/integrations/fyta/) installed to use this card.
 
-![Screenshot](https://raw.githubusercontent.com/dontinelli/fyta-plant-card/main/images/card-image.png)
+![Screenshot](assets/card-image.png)
 
-## Preliminary note
+## Features
 
-Please note that this card still is in (early) development. Please report any bugs or malfunctions of the custom card [here](https://github.com/dontinelli/fyta-plant-card/issues). For problems with the fyta integration itself, please use the issue-tracker of the integration.
+- Displays your plant's image and health status
+- Shows sensor values for moisture, light, temperature, and fertilizer/conductivity
+- Interactive tooltips showing status and current values
+- Colored meters indicating the current state (too low, low, perfect, high, too high)
+- Click on any sensor value to view historical time series data and trends
+- Click on any element to see detailed history graphs
+- Battery status indicator
+
+## How It Works
+
+```mermaid
+graph LR
+    A[FYTA Sensor] -->|Bluetooth| B[FYTA Cloud]
+    B -->|API| C[Home Assistant FYTA Integration]
+    C -->|Entities| D[FYTA Plant Card]
+    D -->|Display| E[Dashboard]
+    D -->|Click| F[History Graphs]
+    
+    style A fill:#75d3ff,stroke:#333,stroke-width:2px
+    style D fill:#aaffc3,stroke:#333,stroke-width:2px
+    style F fill:#ffd8b1,stroke:#333,stroke-width:4px
+```
+
+The FYTA Plant Card connects to your FYTA device entities through Home Assistant, displaying:
+- Current sensor readings (moisture, light, temperature, conductivity)
+- Plant status with color-coded indicators
+- Interactive elements that show detailed information when clicked
 
 ## Installation
 
-1. Download `fyta-plant-card.js` from the [latest release](https://github.com/dontinelli/fyta-plant-card/releases) and move this file to the `config/www` folder.
-2. Ensure you have advanced mode enabled (accessible via your username in the bottom left corner)
-3. Go to Configuration -> Lovelace Dashboards -> Resources.
-4. Add `/local/fyta-plant-card.js` with type JS module.
-5. Refresh the page? Or restart Home Assistant? The card should eventually be there.
+1. Download `fyta-plant-card.js` from the [latest release](https://github.com/dontinelli/fyta-plant-card/releases).
+2. Using the File editor add-on, create the `config/www` folder if it doesn't exist yet, and upload the file to this folder.
+3. Ensure you have advanced mode enabled (accessible via your username in the bottom left corner)
+4. Go to any dashboard where you have edit rights, click on "Edit" in the top right corner, then click the three dots menu and select "Manage resources".
+5. Add `/local/fyta-plant-card.js` with type JS module.
+6. Refresh the page or restart Home Assistant for the card to appear in your dashboard. If the card doesn't appear, try clearing your browser cache.
 
-## Options
+### Video Installation Guide
 
-The custom card comes with a visual card editor, which in particular facilitates the selection of the desired fyta plant.
+Please note that while the card has been updated since this video was created, the basic installation procedure remains the same. For a visual guide on how to install and configure the card, check out this video tutorial:
 
-For configuration in YAML-mode, the following paramenters must/may be set:
+[![Fyta Plant Card Installation Tutorial](https://img.youtube.com/vi/KS1u91yYSsE/0.jpg)](https://youtu.be/KS1u91yYSsE)
 
-| Name              | Type    | Requirement  | Description                                                          |
-| ----------------- | ------- | ------------ | -------------------------------------------------------------------- |
-| type              | string  | **Required** | `custom:fyta-plant-card`, is automatically set in ui-mode            |
-| device            | string  | **Required** | Device id of the plant in Home Assistant                             |
-| title             | string  | **Optional** | Card title (by default this will be the plant name)                  |
+## Usage
+
+After adding the card to your dashboard, you can:
+- Click on the plant name or image to see detailed plant information
+- Click on any sensor to see its historical data graph
+- Hover over sensors to see tooltips with detailed status information
+- Battery indicator in the top right shows the current battery level
+
+![Card Demonstration](assets/card-vid.gif)
+
+### Status Indicators
+
+The card uses color-coded indicators to show the status of each measurement:
+- 🟢 **Green**: Perfect condition
+- 🟡 **Yellow**: High or Low (needs attention)
+- 🔴 **Red**: Too High or Too Low (critical - immediate attention needed)
+- ⚪ **Gray**: No data available
+
+## Configuration Options
+
+The custom card comes with a visual card editor, which facilitates the selection of the desired Fyta plant.
+
+For configuration in YAML mode, the following parameters are available:
+
+| Name              | Type    | Requirement  | Description                                            |
+| ----------------- | ------- | ------------ | ------------------------------------------------------ |
+| type              | string  | **Required** | `custom:fyta-plant-card`                               |
+| device_id         | string  | **Required** | Device ID of the plant in Home Assistant               |
+| title             | string  | **Optional** | Card title (by default this will be the plant name)    |
+
+## Example Configuration
+
+```yaml
+type: 'custom:fyta-plant-card'
+device_id: 12345abc67890def123456
+title: My Lovely Monstera
+```
+
+## Troubleshooting
+
+If you encounter any issues with the card:
+
+1. Make sure the Fyta integration is properly set up and your plants are connected
+2. Verify that your plant's device ID is correct
+3. Check the browser console for any error messages
+4. Report any bugs or request features on the GitHub issues page
+
+## Contributing
+
+Feel free to fork the project and submit pull requests with improvements or fixes. For major changes, please open an issue first to discuss what you would like to change.
+
+## Acknowledgements
+
+This card was inspired by and adapted from [Olen's lovelace-flower-card](https://github.com/Olen/lovelace-flower-card). The design aesthetic, layout, and several functional aspects were based on this excellent work. Many thanks to @Olen and the contributors to that project for creating such a useful card that served as a template for this implementation.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details. This license ensures that all modified versions of the code remain freely available to the community. Any derivative work must also be distributed under the same license terms.

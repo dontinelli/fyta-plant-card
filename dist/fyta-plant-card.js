@@ -1,4 +1,3 @@
-
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace")
 );
@@ -27,30 +26,68 @@ class FytaPlantCard extends HTMLElement {
     this._plant_image = "";
     this._sensor_entities = {battery_entity: "", light_entity: "", moisture_entity: "", salinity_entity: "", temperature_entity: ""};
     this._status_entities = { plant_status: "", light_status: "", moisture_status: "", salinity_status: "", temperature_status: "" };
-    this._plantStatusColor = { deleted: "white", doing_great: "green", need_attention: "yellow", no_sensor: "white" };
-    this._measurementStatusColor = {no_data: "white", too_low: "red", low: "yellow", perfect: "green", high: "yellow", too_high: "red"};
+    
+    // Improved color scheme for plant status
+    this._plantStatusColor = { 
+      deleted: "var(--text-color, white)", 
+      doing_great: "var(--success-color, #4CAF50)", 
+      need_attention: "var(--warning-color, #FFC107)", 
+      no_sensor: "var(--disabled-text-color, gray)" 
+    };
+    
+    // Improved color scheme for measurement status
+    this._measurementStatusColor = {
+      no_data: "var(--disabled-text-color, gray)",
+      too_low: "var(--error-color, #F44336)", 
+      low: "var(--warning-color, #FFC107)", 
+      perfect: "var(--success-color, #4CAF50)", 
+      high: "var(--warning-color, #FFC107)", 
+      too_high: "var(--error-color, #F44336)"
+    };
 
-    this._icons = [
-      "mdi:battery",
-      "mdi:white-balance-sunny",
-      "mdi:water",
-      "mdi:thermometer",
-      "mdi:emoticon-poop"
-    ];
+    // Icons for different sensor types
+    this._icons = {
+      battery_entity: "mdi:battery",
+      light_entity: "mdi:white-balance-sunny",
+      moisture_entity: "mdi:water",
+      temperature_entity: "mdi:thermometer",
+      salinity_entity: "mdi:emoticon-poop"
+    };
   }
 
   _click(entity) {
-    this._fire("hass-more-info", { entityId: entity });
+    if (!entity) return;
+    const event = new Event("hass-more-info", {
+      bubbles: true,
+      cancelable: false,
+      composed: true
+    });
+    event.detail = { entityId: entity };
+    this.dispatchEvent(event);
+    return event;
   }
 
   _computeBatteryIcon(state) {
-    const icon = 'hass:battery';
     if (state <= 5) {
-      return `${icon}-alert`;
-    } else if (state < 95) {
-      return `${icon}-${Math.round((state / 10) - 0.01) * 10}`;
+      return "mdi:battery-alert";
+    } else if (state <= 20) {
+      return "mdi:battery-20";
+    } else if (state <= 30) {
+      return "mdi:battery-30";
+    } else if (state <= 40) {
+      return "mdi:battery-40";
+    } else if (state <= 50) {
+      return "mdi:battery-50";
+    } else if (state <= 60) {
+      return "mdi:battery-60";
+    } else if (state <= 70) {
+      return "mdi:battery-70";
+    } else if (state <= 80) {
+      return "mdi:battery-80";
+    } else if (state <= 90) {
+      return "mdi:battery-90";
     }
-    return icon;
+    return "mdi:battery";
   }
 
   _fire(type, detail) {
@@ -60,42 +97,44 @@ class FytaPlantCard extends HTMLElement {
       composed: true
     });
     event.detail = detail || {};
-    this.shadowRoot.dispatchEvent(event);
+    this.dispatchEvent(event);
     return event;
   }
 
   _getStateColor(key, hass) {
-    console.debug(`getStateColor - ${key}`);
-    console.debug(`State - ${hass.states[this._status_entities.plant_status].state}, color: ${this._plantStatusColor[hass.states[this._status_entities.plant_status].state]}`);
     if (key === 'battery_entity') {
-      const state = hass.states[this._status_entities.temperature_status].state;
-      if (state <= 5) {
-        return "red";
-      } else if (state <= 15) {
-        return "yellow";
-      } else {
-        return "white";
+      const entity = this._sensor_entities.battery_entity;
+      if (!entity) return "var(--disabled-text-color, gray)";
+      
+      const state = parseInt(hass.states[entity].state);
+      if (state <= 10) {
+        return "var(--error-color, #F44336)";
+      } else if (state <= 20) {
+        return "var(--warning-color, #FFC107)";
       }
+      return "var(--success-color, #4CAF50)";
     } else if (key === 'light_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.light_status].state];
+      return this._measurementStatusColor[hass.states[this._status_entities.light_status]?.state || "no_data"];
     } else if (key === 'moisture_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.moisture_status].state];
+      return this._measurementStatusColor[hass.states[this._status_entities.moisture_status]?.state || "no_data"];
     } else if (key === 'salinity_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status].state];
+      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
     } else if (key === 'temperature_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.temperature_status].state];
+      return this._measurementStatusColor[hass.states[this._status_entities.temperature_status]?.state || "no_data"];
     } else if (key === 'plant') {
-      return this._plantStatusColor[hass.states[this._status_entities.plant_status].state];
+      return this._plantStatusColor[hass.states[this._status_entities.plant_status]?.state || "no_sensor"];
     }
+    
+    return "var(--primary-text-color, white)";
   }
 
   getCardSize() {
-    return 3;
+    return 5;
   }
 
   getLayoutOptions() {
     return {
-      grid_rows: 2,
+      grid_rows: 12,
       grid_columns: 3,
       grid_min_rows: 2,
       grid_min_columns: 2,
@@ -113,50 +152,10 @@ class FytaPlantCard extends HTMLElement {
       this.updateEntities(this.config.device_id, hass)
     }
 
-    const config = this.config;
-
-    let _title = config.title;
-
-    this.shadowRoot.getElementById("box").innerHTML = `
-      <div class="title" style="color:${this._getStateColor("plant", hass)};">${_title}</div>
-      <div id="sensors">
-      </div>
-    `;
-
-    const sensorKeys = ['battery_entity', 'light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity'];
-    sensorKeys.forEach(key => {
-      if (this._sensor_entities[key] != "") {
-        let _sensor = this._sensor_entities[key];
-        let _state = hass.states[String(_sensor)].state;
-        let _uom = hass.states[String(_sensor)].attributes.unit_of_measurement;
-        let _class = "state-on";
-        //if (hass.states[this._sensor_entities[key]].attributes.problem.indexOf(_sensors[parseInt(i)]) !== -1) {
-        //  _class += " state-problem";
-        //}
-
-
-        let _icon = "";
-        if (key === 'battery_entity') {
-          _icon = this._computeBatteryIcon(_state);
-        } else {
-          _icon = this._icons[sensorKeys.indexOf(key)]
-        }
-
-        this.shadowRoot.getElementById("sensors").innerHTML += `
-          <div id="sensor_${key}" class="sensor">
-            <div class="icon" style="color:${this._getStateColor(key, hass)};"><ha-icon icon="${_icon}"></ha-icon></div>
-            <div class="${_class}">${_state}</div>
-            <div class="uom">${_uom}</div>
-          </div>
-        `;
-      }
-    });
-
-    sensorKeys.forEach(key => {
-      if (this._sensor_entities[key] != "") {
-        this.shadowRoot.getElementById(`sensor_${key}`).onclick = this._click.bind(this, this._sensor_entities[key]);
-      }
-    });
+    // On subsequent updates, we only need to update the display values and colors
+    if (this._initialized) {
+      this._updateDisplayValues(hass);
+    }
   }
 
   setConfig(config) {
@@ -208,11 +207,12 @@ class FytaPlantCard extends HTMLElement {
     const content = document.createElement("div");
     const style = document.createElement("style");
 
-    style.textContent = css`
+    style.textContent = `
       ha-card {
         position: relative;
         padding: 0;
         background-size: 100%;
+        margin-top: 25px;
       }
 
       img {
@@ -222,58 +222,307 @@ class FytaPlantCard extends HTMLElement {
         width: 100%;
       }
 
-      .box {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 16%;
-        min-height: 64px;
-        background-color: rgba(0, 0, 0, 0.5);
-        padding: 4px 8px;
-        color: white;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-evenly;
-        align-items: center;
-        text-align: center;
+      .header {
+        padding-top: 8px;
+        height: 72px;
       }
 
-      div.title {
-        flex: 0 1 20%;
-      }
-
-      div#sensors {
-        display: flex;
-        justify-content: space-between;
-        flex: 1;
-      }
-
-      .sensor {
-        flex-grow: 1;
-      }
-
-      ha-icon {
+      .header > img {
+        border-radius: 50%;
+        width: 88px;
+        height: 88px;
+        object-fit: cover;
+        margin-left: 16px;
+        margin-right: 16px;
+        margin-top: -32px;
+        float: left;
+        box-shadow: var( --ha-card-box-shadow, 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2) );
         cursor: pointer;
       }
 
-      .state-problem {
-        color: var(--accent-color);
+      .header > #name {
+        font-weight: bold;
+        width: 100%;
+        margin-top: 16px;
+        text-transform: capitalize;
+        display: block;
+        cursor: pointer;
+      }
+
+      #name ha-icon {
+        color: rgb(240, 163, 163);
+      }
+
+      .header > #species {
+        text-transform: capitalize;
+        color: #8c96a5;
+        display: block;
+        cursor: pointer;
+      }
+
+      #battery {
+        float: right;
+        margin-right: 16px;
+        margin-top: -15px;
+      }
+
+      .attributes {
+        display: flex;
+        flex-wrap: wrap;
+        white-space: nowrap;
+        padding: 8px;
+      }
+
+      .attribute {
+        white-space: nowrap;
+        display: flex;  
+        align-items: center;
+        width: 50%;
+        margin-bottom: 8px;
+        cursor: pointer;
+      }
+
+      .attribute ha-icon {
+        margin-right: 10px;
+        margin-left: 5px;
+      }
+
+      .sensor-value {
+        flex-grow: 1;
+      }
+
+      .meter {
+        height: 8px;
+        background-color: var(--primary-background-color);
+        border-radius: 2px;
+        margin-right: 5px;
+        display: inline-grid;
+        overflow: hidden;
+        flex-grow: 10;
+        max-width: 40%;
+      }
+
+      .meter > span {
+        grid-row: 1;
+        grid-column: 1;
+        height: 100%;
+      }
+
+      .meter > .good {
+        background-color: rgba(43,194,83,1);
+      }
+
+      .meter > .bad {
+        background-color: rgba(240,163,163);
+      }
+
+      .meter > .warning {
+        background-color: rgba(255,193,7,1);
+      }
+
+      .meter > .unavailable {
+        background-color: rgba(158,158,158,1);
+      }
+
+      .divider {
+        height: 1px;
+        background-color: #727272;
+        opacity: 0.25;
+        margin-left: 8px;
+        margin-right: 8px;
+      }
+
+      .tooltip {
+        position: relative;
+      }
+
+      .tooltip .tip {
+        opacity: 0;
+        visibility: hidden;
+        position: absolute;
+        padding: 6px 10px;
+        top: 3.3em;
+        left: 50%;
+        -webkit-transform: translateX(-50%) translateY(-180%);
+        transform: translateX(-50%) translateY(-180%);
+        background: grey;
+        color: white;
+        white-space: nowrap;
+        z-index: 2;
+        border-radius: 2px;
+        transition: opacity 0.2s cubic-bezier(0.64, 0.09, 0.08, 1), transform 0.2s cubic-bezier(0.64, 0.09, 0.08, 1);
+      }
+
+      .battery.tooltip .tip {
+        top: 2em;
+      }
+
+      .tooltip:hover .tip, .tooltip:active .tip {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+        -webkit-transform: translateX(-50%) translateY(-200%);
+        transform: translateX(-50%) translateY(-200%);
+      }
+
+      .uom {
+        color: var(--secondary-text-color);
+        font-size: 0.9em;
       }
     `;
 
     content.id = "container";
     content.innerHTML = `
-      <div id="wrapper">
-        <img src="${this._plant_image}" />
+      <div class="header">
+        <img src="${this._plant_image}" @click="${this._click.bind(this, this._status_entities.plant_status)}">
+        <span id="name" style="color:${this._getStateColor("plant", hass)};" @click="${this._click.bind(this, this._status_entities.plant_status)}">${this.config.title} <ha-icon .icon="mdi:${hass.states[this._status_entities.plant_status].state === 'need_attention' ? "alert-circle-outline" : ""}"></ha-icon>
+        </span>
+        <span id="battery">${this._renderBattery(hass)}</span>
+        <span id="species" @click="${this._click.bind(this, this._status_entities.plant_status)}">${hass.states[this._status_entities.plant_status].attributes.friendly_name || ""}</span>
       </div>
-      <div class="box" id="box"></div>
+      <div class="divider"></div>
+      <div class="attributes">
+        ${this._renderSensors(hass)}
+      </div>
     `;
     card.appendChild(content);
     card.appendChild(style);
     root.appendChild(card);
 
+    // Set up event delegation for click handlers
+    card.addEventListener('click', (e) => {
+      // Find the closest clickable element
+      const clickableElement = e.target.closest('[data-entity], img, #name, #species, .battery, .attribute');
+      if (clickableElement) {
+        const entityId = clickableElement.dataset.entity || this._status_entities.plant_status;
+        if (entityId) {
+          this._click(entityId);
+          e.stopPropagation();
+        }
+      }
+    });
+
     this._initialized = true;
+  }
+
+  _renderBattery(hass) {
+    if (this._sensor_entities.battery_entity === "") {
+      return "";
+    }
+
+    const entity = this._sensor_entities.battery_entity;
+    const state = parseInt(hass.states[entity].state);
+    
+    let icon = "mdi:battery";
+    let color = "green";
+    let statusText = "Good";
+    
+    if (state <= 5) {
+      icon = "mdi:battery-alert";
+      color = "red";
+      statusText = "Critical";
+    } else if (state <= 20) {
+      icon = "mdi:battery-20";
+      color = "red";
+      statusText = "Very Low";
+    } else if (state <= 30) {
+      icon = "mdi:battery-30";
+      color = "orange";
+      statusText = "Low";
+    } else if (state <= 40) {
+      icon = "mdi:battery-40";
+      color = "orange";
+      statusText = "Medium Low";
+    } else if (state <= 50) {
+      icon = "mdi:battery-50";
+      color = "green";
+      statusText = "Medium";
+    } else if (state <= 60) {
+      icon = "mdi:battery-60";
+      color = "green";
+      statusText = "Medium High";
+    } else if (state <= 70) {
+      icon = "mdi:battery-70";
+      color = "green";
+      statusText = "High";
+    } else if (state <= 80) {
+      icon = "mdi:battery-80";
+      color = "green";
+      statusText = "Very High";
+    } else if (state <= 90) {
+      icon = "mdi:battery-90";
+      color = "green";
+      statusText = "Excellent";
+    }
+    
+    return `
+      <div class="battery tooltip" @click="${this._click.bind(this, entity)}">
+        <div class="tip" style="text-align:center;">Battery: ${state}%<br>Status: ${statusText}</div>
+        <ha-icon icon="${icon}" style="color: ${color};"></ha-icon>
+      </div>
+    `;
+  }
+
+  _renderSensors(hass) {
+    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity'];
+    let sensorHtml = "";
+    
+    sensorKeys.forEach(key => {
+      if (this._sensor_entities[key] !== "") {
+        const entity = this._sensor_entities[key];
+        const state = hass.states[entity].state;
+        const uom = hass.states[entity].attributes.unit_of_measurement || "";
+        const statusKey = key.replace("_entity", "_status");
+        const statusEntity = this._status_entities[statusKey];
+        const statusState = statusEntity ? hass.states[statusEntity].state : "";
+        const color = this._getStateColor(key, hass);
+        
+        // Calculate meter width and class based on status
+        let meterPercentage = 50; // Default to mid-range if no status
+        let meterClass = "unavailable";
+        
+        if (statusState) {
+          if (statusState === "too_low") {
+            meterPercentage = 10;
+            meterClass = "bad";
+          } else if (statusState === "low") {
+            meterPercentage = 30;
+            meterClass = "warning";
+          } else if (statusState === "perfect") {
+            meterPercentage = 50;
+            meterClass = "good";
+          } else if (statusState === "high") {
+            meterPercentage = 70;
+            meterClass = "warning";
+          } else if (statusState === "too_high") {
+            meterPercentage = 90;
+            meterClass = "bad";
+          }
+        }
+        
+        // Simplified tooltip content with current value and status
+        const tooltipContent = statusEntity ? 
+          `${key.replace("_entity", "")}: ${state} ${uom}<br>Status: ${statusState.replace(/_/g, " ")}` :
+          `${key.replace("_entity", "")}: ${state} ${uom}`;
+        
+        // Icon based on sensor type
+        let icon = this._icons[key];
+        
+        sensorHtml += `
+          <div class="attribute tooltip" @click="${this._click.bind(this, entity)}" data-entity="${entity}">
+            <div class="tip" style="text-align:center;">${tooltipContent}</div>
+            <ha-icon icon="${icon}" style="color:${color};"></ha-icon>
+            <div class="meter">
+              <span class="${meterClass}" style="width: ${meterPercentage}%;"></span>
+            </div>
+            <div class="sensor-value">${state}</div>
+            <div class="uom">${uom}</div>
+          </div>
+        `;
+      }
+    });
+    
+    return sensorHtml;
   }
 
   getEntityId(id, hass) {
@@ -293,7 +542,7 @@ class FytaPlantCard extends HTMLElement {
       const entityId = hass.states[id].entity_id;
       this._sensor_entities.light_entity = entityId;
     } else if (id.startsWith('image.')) {
-      this._plant_image =  hass.states[id].attributes.entity_picture;
+      this._plant_image = hass.states[id].attributes.entity_picture;
     } else if (hass.states[id].attributes.device_class == 'enum') {
       if (hass.entities[id].translation_key === 'plant_status') {
         this._status_entities.plant_status = hass.states[id].entity_id;
@@ -307,6 +556,94 @@ class FytaPlantCard extends HTMLElement {
         this._status_entities.temperature_status = hass.states[id].entity_id;
       }
     }
+  }
+
+  _updateDisplayValues(hass) {
+    // Update plant status and title
+    const nameElement = this.shadowRoot.querySelector('#name');
+    if (nameElement) {
+      nameElement.style.color = this._getStateColor("plant", hass);
+      const iconElement = nameElement.querySelector('ha-icon');
+      if (iconElement) {
+        iconElement.icon = `mdi:${hass.states[this._status_entities.plant_status].state === 'need_attention' ? "alert-circle-outline" : ""}`;
+      }
+    }
+    
+    // Update battery
+    const batteryElement = this.shadowRoot.querySelector('#battery');
+    if (batteryElement) {
+      batteryElement.innerHTML = this._renderBattery(hass);
+    }
+    
+    // Update sensor values
+    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity'];
+    
+    sensorKeys.forEach(key => {
+      if (this._sensor_entities[key] !== "") {
+        const entity = this._sensor_entities[key];
+        const sensorElement = this.shadowRoot.querySelector(`.attribute[data-entity="${entity}"]`);
+        
+        if (sensorElement) {
+          const state = hass.states[entity].state;
+          const iconElement = sensorElement.querySelector('ha-icon');
+          const valueElement = sensorElement.querySelector('.sensor-value');
+          const meterElement = sensorElement.querySelector('.meter span');
+          
+          if (iconElement) {
+            iconElement.style.color = this._getStateColor(key, hass);
+          }
+          
+          if (valueElement) {
+            valueElement.textContent = state;
+          }
+          
+          if (meterElement) {
+            const statusKey = key.replace("_entity", "_status");
+            const statusEntity = this._status_entities[statusKey];
+            const statusState = statusEntity ? hass.states[statusEntity].state : "";
+            
+            // Calculate meter width and class based on status
+            let meterPercentage = 50; // Default to mid-range if no status
+            let meterClass = "unavailable";
+            
+            if (statusState) {
+              if (statusState === "too_low") {
+                meterPercentage = 10;
+                meterClass = "bad";
+              } else if (statusState === "low") {
+                meterPercentage = 30;
+                meterClass = "warning";
+              } else if (statusState === "perfect") {
+                meterPercentage = 50;
+                meterClass = "good";
+              } else if (statusState === "high") {
+                meterPercentage = 70;
+                meterClass = "warning";
+              } else if (statusState === "too_high") {
+                meterPercentage = 90;
+                meterClass = "bad";
+              }
+            }
+            
+            meterElement.className = meterClass;
+            meterElement.style.width = `${meterPercentage}%`;
+            
+            // Update tooltip with current values
+            const tooltipElement = sensorElement.querySelector('.tip');
+            if (tooltipElement) {
+              const uom = hass.states[entity].attributes.unit_of_measurement || "";
+              
+              // Simplified tooltip content
+              const tooltipContent = statusEntity ? 
+                `${key.replace("_entity", "")}: ${state} ${uom}<br>Status: ${statusState.replace(/_/g, " ")}` :
+                `${key.replace("_entity", "")}: ${state} ${uom}`;
+              
+              tooltipElement.innerHTML = tooltipContent;
+            }
+          }
+        }
+      }
+    });
   }
 }
 
