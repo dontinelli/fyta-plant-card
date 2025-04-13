@@ -25,7 +25,7 @@ class FytaPlantCard extends HTMLElement {
     this._initialized = false;
     this._plant_image = "";
     this._sensor_entities = {battery_entity: "", light_entity: "", moisture_entity: "", salinity_entity: "", temperature_entity: ""};
-    this._status_entities = { plant_status: "", light_status: "", moisture_status: "", salinity_status: "", temperature_status: "" };
+    this._status_entities = { plant_status: "", light_status: "", moisture_status: "", salinity_status: "", nutrients_status: "", temperature_status: "" };
     
     // Improved color scheme for plant status
     this._plantStatusColor = { 
@@ -118,7 +118,7 @@ class FytaPlantCard extends HTMLElement {
     } else if (key === 'moisture_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.moisture_status]?.state || "no_data"];
     } else if (key === 'salinity_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
+      return this._measurementStatusColor[hass.states[this._status_entities.nutrients_status]?.state || "no_data"];
     } else if (key === 'temperature_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.temperature_status]?.state || "no_data"];
     } else if (key === 'plant') {
@@ -134,9 +134,9 @@ class FytaPlantCard extends HTMLElement {
 
   getLayoutOptions() {
     return {
-      grid_rows: 12,
-      grid_columns: 3,
-      grid_min_rows: 2,
+      grid_rows: 3,
+      grid_columns: 4,
+      grid_min_rows: 3,
       grid_min_columns: 2,
     };
   }
@@ -472,9 +472,23 @@ class FytaPlantCard extends HTMLElement {
         const entity = this._sensor_entities[key];
         const state = hass.states[entity].state;
         const uom = hass.states[entity].attributes.unit_of_measurement || "";
-        const statusKey = key.replace("_entity", "_status");
-        const statusEntity = this._status_entities[statusKey];
-        const statusState = statusEntity ? hass.states[statusEntity].state : "";
+        
+        // Get the proper status entity - use nutrients_status for salinity
+        let statusEntity;
+        let statusState = "";
+        
+        if (key === 'salinity_entity') {
+          statusEntity = this._status_entities.nutrients_status;
+          if (statusEntity) {
+            statusState = hass.states[statusEntity].state;
+          }
+        } else {
+          statusEntity = this._status_entities[key.replace("_entity", "_status")];
+          if (statusEntity) {
+            statusState = hass.states[statusEntity].state;
+          }
+        }
+        
         const color = this._getStateColor(key, hass);
         
         // Calculate meter width and class based on status
@@ -552,6 +566,8 @@ class FytaPlantCard extends HTMLElement {
         this._status_entities.moisture_status = hass.states[id].entity_id;
       } else if (hass.entities[id].translation_key === 'salinity_status') {
         this._status_entities.salinity_status = hass.states[id].entity_id;
+      } else if (hass.entities[id].translation_key === 'nutrients_status') {
+        this._status_entities.nutrients_status = hass.states[id].entity_id;
       } else if (hass.entities[id].translation_key === 'temperature_status') {
         this._status_entities.temperature_status = hass.states[id].entity_id;
       }
@@ -599,8 +615,22 @@ class FytaPlantCard extends HTMLElement {
           
           if (meterElement) {
             const statusKey = key.replace("_entity", "_status");
-            const statusEntity = this._status_entities[statusKey];
-            const statusState = statusEntity ? hass.states[statusEntity].state : "";
+            
+            // Get the proper status entity - use nutrients_status for salinity
+            let statusEntity;
+            let statusState = "";
+            
+            if (key === 'salinity_entity') {
+              statusEntity = this._status_entities.nutrients_status;
+              if (statusEntity) {
+                statusState = hass.states[statusEntity].state;
+              }
+            } else {
+              statusEntity = this._status_entities[statusKey];
+              if (statusEntity) {
+                statusState = hass.states[statusEntity].state;
+              }
+            }
             
             // Calculate meter width and class based on status
             let meterPercentage = 50; // Default to mid-range if no status
