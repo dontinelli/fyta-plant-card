@@ -35,6 +35,18 @@ The FYTA Plant Card connects to your FYTA device entities through Home Assistant
 - Plant status with color-coded indicators
 - Interactive elements that show detailed information when clicked
 
+### HomeAssistant Integration
+
+This card works with the official [Home Assistant FYTA integration](https://www.home-assistant.io/integrations/fyta/). The integration communicates with the FYTA Cloud API to retrieve your plant data and makes it available as entities in Home Assistant. Once the integration is set up, this card provides a beautiful visualization of that data.
+
+To set up the FYTA integration in Home Assistant:
+1. Go to Settings → Devices & Services
+2. Click "Add Integration" and search for "FYTA"
+3. Follow the prompts to connect your FYTA account
+4. Once connected, your FYTA plants will be available as entities
+
+The FYTA Plant Card then uses these entities to display your plant information in an intuitive and visually appealing way on your dashboard.
+
 ## Installation
 
 1. Download `fyta-plant-card.js` from the [latest release](https://github.com/dontinelli/fyta-plant-card/releases).
