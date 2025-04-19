@@ -264,9 +264,9 @@ class FytaPlantCard extends HTMLElement {
     } else if (key === 'moisture_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.moisture_status]?.state || "no_data"];
     } else if (key === 'salinity_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.nutrients_status]?.state || "no_data"];
+      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
     } else if (key === 'ec_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.nutrients_status]?.state || "no_data"];
+      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
     } else if (key === 'temperature_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.temperature_status]?.state || "no_data"];
     } else if (key === 'plant') {
@@ -354,7 +354,6 @@ class FytaPlantCard extends HTMLElement {
     if (config) {
       Object.keys(config).forEach(key => {
         if (config[key] !== undefined && 
-            key !== 'show_fertilize_days' && 
             key !== 'display_options' &&
             key !== 'show_ec' &&
             key !== 'sensor_order' &&
@@ -363,15 +362,6 @@ class FytaPlantCard extends HTMLElement {
           newConfig[key] = config[key];
         }
       });
-    }
-    
-    // Handle legacy config with show_fertilize_days
-    if (config && config.show_fertilize_days !== undefined) {
-      // If show_fertilize_days was explicitly set to false but show_nutrition wasn't,
-      // respect the fertilize days setting by disabling nutrition too
-      if (config.show_fertilize_days === false && config.show_nutrition === undefined) {
-        newConfig.show_nutrition = false;
-      }
     }
     
     // Handle legacy config with sensor_order
@@ -883,7 +873,7 @@ class FytaPlantCard extends HTMLElement {
       let statusState = "";
       
       if (key === 'salinity_entity' || key === 'ec_entity') {
-        statusEntity = this._status_entities.nutrients_status;
+        statusEntity = this._status_entities.salinity_status;
         if (statusEntity) {
           statusState = hass.states[statusEntity].state;
         }
@@ -1104,7 +1094,7 @@ class FytaPlantCard extends HTMLElement {
             let statusState = "";
             
             if (key === 'salinity_entity' || key === 'ec_entity') {
-              statusEntity = this._status_entities.nutrients_status;
+              statusEntity = this._status_entities.salinity_status;
               if (statusEntity) {
                 statusState = hass.states[statusEntity].state;
               }
@@ -1286,7 +1276,6 @@ export class FytaPlantCardEditor extends LitElement {
     if (this.config) {
       Object.keys(this.config).forEach(key => {
         if (this.config[key] !== undefined && 
-            key !== 'show_fertilize_days' && 
             key !== 'display_options' &&
             key !== 'show_ec' &&
             key !== 'sensor_order' &&
@@ -1425,7 +1414,6 @@ export class FytaPlantCardEditor extends LitElement {
     if (config) {
       Object.keys(config).forEach(key => {
         if (config[key] !== undefined && 
-            key !== 'show_fertilize_days' && 
             key !== 'display_options' &&
             key !== 'show_ec' &&
             key !== 'sensor_order' &&
@@ -1434,15 +1422,6 @@ export class FytaPlantCardEditor extends LitElement {
           newConfig[key] = config[key];
         }
       });
-      
-      // Handle legacy config with show_fertilize_days
-      if (config.show_fertilize_days !== undefined) {
-        // If show_fertilize_days was explicitly set to false but show_nutrition wasn't,
-        // respect the fertilize days setting by disabling nutrition too
-        if (config.show_fertilize_days === false && config.show_nutrition === undefined) {
-          newConfig.show_nutrition = false;
-        }
-      }
       
       // Handle legacy config with sensor_order
       if (config.sensor_order && config.sensor_order !== 'default') {

@@ -32,7 +32,7 @@ graph LR
     style F fill:#ffd8b1,stroke:#333,stroke-width:4px
 ```
 
-The FYTA Plant Card connects to your FYTA device entities through Home Assistant, displaying:
+The FYTA Plant Card displays data from the FYTA integration in Home Assistant, showing:
 - Current sensor readings (moisture, light, temperature, conductivity)
 - Plant status with color-coded indicators
 - Interactive elements that show detailed information when clicked
