@@ -8,14 +8,14 @@ You will need the [Fyta integration](https://www.home-assistant.io/integrations/
 ## Features
 
 - Displays your plant's image and health status
-- Shows sensor values for moisture, light, temperature, conductivity/salinity, and nutrition status as a fifth value
-- Circular battery indicator around the plant image
-- Customizable sensor display with ability to show/hide specific metrics
-- Configurable sensor ordering to arrange values according to your preference
+- Shows sensor values for moisture, light, temperature, and fertilizer/conductivity
 - Interactive tooltips showing status and current values
 - Colored meters indicating the current state (too low, low, perfect, high, too high)
 - Click on any sensor value to view historical time series data and trends
 - Click on any element to see detailed history graphs
+- Battery status indicator that only appears when battery is low (below 10%)
+- Customizable sensor display order with dropdown selection
+- Compact display mode for smaller dashboards
 
 ## How It Works
 
@@ -34,10 +34,8 @@ graph LR
 
 The FYTA Plant Card connects to your FYTA device entities through Home Assistant, displaying:
 - Current sensor readings (moisture, light, temperature, conductivity)
-- Nutrition status as an additional metric
 - Plant status with color-coded indicators
 - Interactive elements that show detailed information when clicked
-- Battery status with an intuitive circular indicator
 
 ### HomeAssistant Integration
 
@@ -53,7 +51,7 @@ The FYTA Plant Card then uses these entities to display your plant information i
 
 ## Installation
 
-1. Download `fyta-plant-card.js` from the [latest release](https://github.com/FYTA-GmbH/fyta-plant-card/blob/main/dist/fyta-plant-card.js).
+1. Download `fyta-plant-card.js` from the [latest release](https://github.com/dontinelli/fyta-plant-card/releases).
 2. Using the File editor add-on, create the `config/www` folder if it doesn't exist yet, and upload the file to this folder.
 3. Ensure you have advanced mode enabled (accessible via your username in the bottom left corner)
 4. Go to any dashboard where you have edit rights, click on "Edit" in the top right corner, then click the three dots menu and select "Manage resources".
@@ -72,7 +70,7 @@ After adding the card to your dashboard, you can:
 - Click on the plant name or image to see detailed plant information
 - Click on any sensor to see its historical data graph
 - Hover over sensors to see tooltips with detailed status information
-- Hover over the battery circle indicator to see exact battery percentage
+- Battery indicator only appears when battery level is below 10%
 
 ![Card Demonstration](assets/card-vid.gif)
 
@@ -84,35 +82,43 @@ The card uses color-coded indicators to show the status of each measurement:
 - 🔴 **Red**: Too High or Too Low (critical - immediate attention needed)
 - ⚪ **Gray**: No data available
 
-### Battery Indicator
-
-The circular indicator around the plant image shows the battery level:
-- The circle fills clockwise, with a full circle representing 100% battery
-- Colors change based on battery level (green for good, yellow for low, red for critical)
-- Hover over the circle to see the exact percentage and status
-
 ## Configuration Options
 
-The custom card comes with a visual card editor, which facilitates the selection of the desired Fyta plant.
+The custom card comes with a visual card editor, which facilitates the selection of the desired Fyta plant and configuration of display options.
 
 For configuration in YAML mode, the following parameters are available:
 
-| Name              | Type    | Requirement  | Description                                            |
-| ----------------- | ------- | ------------ | ------------------------------------------------------ |
-| type              | string  | **Required** | `custom:fyta-plant-card`                               |
-| device_id         | string  | **Required** | Device ID of the plant in Home Assistant               |
-| title             | string  | **Optional** | Card title (by default this will be the plant name)    |
-| display_mode      | string  | **Optional** | `full` or `compact` (default: `full`)                  |
-| show_light        | boolean | **Optional** | Show light sensor (default: `true`)                    |
-| show_moisture     | boolean | **Optional** | Show moisture sensor (default: `true`)                 |
-| show_temperature  | boolean | **Optional** | Show temperature sensor (default: `true`)              |
-| show_salinity     | boolean | **Optional** | Show salinity/EC sensor (default: `true`)              |
-| show_nutrition    | boolean | **Optional** | Show nutrition status (default: `true`)                |
-| light_order       | string  | **Optional** | Display order for light (1-5, default: `1`)            |
-| moisture_order    | string  | **Optional** | Display order for moisture (1-5, default: `2`)         |
-| temperature_order | string  | **Optional** | Display order for temperature (1-5, default: `3`)      |
-| salinity_order    | string  | **Optional** | Display order for salinity (1-5, default: `4`)         |
-| nutrition_order   | string  | **Optional** | Display order for nutrition (1-5, default: `5`)        |
+| Name              | Type    | Requirement  | Description                                            | Default     |
+| ----------------- | ------- | ------------ | ------------------------------------------------------ | ----------- |
+| type              | string  | **Required** | `custom:fyta-plant-card`                               | -           |
+| device_id         | string  | **Required** | Device ID of the plant in Home Assistant               | -           |
+| title             | string  | **Optional** | Card title (by default this will be the plant name)    | Plant name  |
+| display_mode      | string  | **Optional** | Display mode: `full` or `compact`                      | `full`      |
+| show_light        | boolean | **Optional** | Show light status                                      | `true`      |
+| light_order       | string  | **Optional** | Display order for light sensor (1-5)                   | `2`         |
+| show_moisture     | boolean | **Optional** | Show moisture status                                   | `true`      |
+| moisture_order    | string  | **Optional** | Display order for moisture sensor (1-5)                | `1`         |
+| show_temperature  | boolean | **Optional** | Show temperature status                                | `true`      |
+| temperature_order | string  | **Optional** | Display order for temperature sensor (1-5)             | `3`         |
+| show_nutrition    | boolean | **Optional** | Show nutrition status                                  | `true`      |
+| nutrition_order   | string  | **Optional** | Display order for nutrition sensor (1-5)               | `4`         |
+| show_salinity     | boolean | **Optional** | Show salinity status                                   | `false`     |
+| salinity_order    | string  | **Optional** | Display order for salinity sensor (1-5)                | `5`         |
+
+### Display Order
+
+The card allows you to customize the order in which sensors are displayed. Sensors are arranged based on their order value (1-5). When there's an odd number of visible sensors, the sensor with the highest order number will appear full-width at the bottom of the card.
+
+By default, the sensors are ordered as follows:
+1. Moisture (water)
+2. Light
+3. Temperature
+4. Nutrition
+5. Salinity (hidden by default)
+
+### Battery Display
+
+The battery indicator only appears when the battery level is below 10%, displaying in red to indicate that attention is needed.
 
 ## Example Configuration
 
@@ -122,24 +128,16 @@ device_id: 12345abc67890def123456
 title: My Lovely Monstera
 display_mode: full
 show_light: true
+light_order: '2'
 show_moisture: true
+moisture_order: '1'
 show_temperature: true
-show_salinity: true
-show_nutrition: true
-light_order: '1'
-moisture_order: '2'
 temperature_order: '3'
-salinity_order: '4'
-nutrition_order: '5'
+show_nutrition: true
+nutrition_order: '4'
+show_salinity: false
+salinity_order: '5'
 ```
-
-## Display Order and Layout
-
-The card supports customizing the order of sensors displayed:
-- Each sensor can be assigned a value from 1-5 (lower numbers appear first)
-- With an odd number of sensors, the last one (highest order number) appears full-width at the bottom
-- With an even number of sensors, they are distributed in two columns
-- You can hide any sensor by toggling its corresponding show option to `false`
 
 ## Troubleshooting
 

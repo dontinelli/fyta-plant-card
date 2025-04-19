@@ -42,7 +42,7 @@ const SCHEMA = [
             mode: "dropdown"
           }
         },
-        default: "1"
+        default: "2"
       }
     ]
   },
@@ -68,7 +68,7 @@ const SCHEMA = [
             mode: "dropdown"
           }
         },
-        default: "2"
+        default: "1"
       }
     ]
   },
@@ -102,12 +102,12 @@ const SCHEMA = [
     type: "grid",
     schema: [
       { 
-        name: "show_salinity", 
+        name: "show_nutrition", 
         selector: { boolean: {} }, 
         required: false,
       },
       {
-        name: "salinity_order",
+        name: "nutrition_order",
         selector: {
           select: {
             options: [
@@ -128,12 +128,13 @@ const SCHEMA = [
     type: "grid",
     schema: [
       { 
-        name: "show_nutrition", 
+        name: "show_salinity", 
         selector: { boolean: {} }, 
         required: false,
+        default: false
       },
       {
-        name: "nutrition_order",
+        name: "salinity_order",
         selector: {
           select: {
             options: [
@@ -159,7 +160,6 @@ const SCHEMA = [
 ];
 
 class FytaPlantCard extends HTMLElement {
-  static version = '1.0.0';
 
   static getConfigElement() {
     return document.createElement("fyta-plant-card-editor");
@@ -171,15 +171,15 @@ class FytaPlantCard extends HTMLElement {
       title: "",
       display_mode: "full",
       show_light: true,
-      light_order: "1",
+      light_order: "2",
       show_moisture: true,
-      moisture_order: "2",
+      moisture_order: "1",
       show_temperature: true,
       temperature_order: "3",
-      show_salinity: true,
-      salinity_order: "4",
+      show_salinity: false,
+      salinity_order: "5",
       show_nutrition: true,
-      nutrition_order: "5"
+      nutrition_order: "4"
     };
   }
 
@@ -339,15 +339,15 @@ class FytaPlantCard extends HTMLElement {
       title: "",
       display_mode: "full",
       show_light: true,
-      light_order: "1",
+      light_order: "2",
       show_moisture: true,
-      moisture_order: "2",
+      moisture_order: "1",
       show_temperature: true,
       temperature_order: "3",
-      show_salinity: true,
-      salinity_order: "4",
+      show_salinity: false,
+      salinity_order: "5",
       show_nutrition: true,
-      nutrition_order: "5"
+      nutrition_order: "4"
     };
     
     // Then copy values from provided config
@@ -455,14 +455,15 @@ class FytaPlantCard extends HTMLElement {
         title: device_name,
         display_mode: this.config.display_mode || "full",
         show_light: this.config.show_light !== undefined ? this.config.show_light : true,
-        light_order: this.config.light_order || "1",
+        light_order: this.config.light_order || "2",
         show_moisture: this.config.show_moisture !== undefined ? this.config.show_moisture : true,
-        moisture_order: this.config.moisture_order || "2",
+        moisture_order: this.config.moisture_order || "1",
         show_temperature: this.config.show_temperature !== undefined ? this.config.show_temperature : true,
         temperature_order: this.config.temperature_order || "3",
-        show_salinity: this.config.show_salinity !== undefined ? this.config.show_salinity : true,
-        salinity_order: this.config.salinity_order || "4",
-        show_nutrition: this.config.show_nutrition !== undefined ? this.config.show_nutrition : true
+        show_salinity: this.config.show_salinity !== undefined ? this.config.show_salinity : false,
+        salinity_order: this.config.salinity_order || "5",
+        show_nutrition: this.config.show_nutrition !== undefined ? this.config.show_nutrition : true,
+        nutrition_order: this.config.nutrition_order || "4"
       };
       
       this.config = newConfig;
@@ -499,83 +500,20 @@ class FytaPlantCard extends HTMLElement {
       }
 
       .header {
-        padding-top: 4px;
-        height: 65px;
+        padding-top: 8px;
+        height: 72px;
         position: relative;
       }
 
-      .image-container {
-        position: relative;
-        width: 88px;
-        height: 88px;
-        margin-left: 16px;
-        margin-right: 16px;
-        margin-top: -28px;
-        float: left;
-        z-index: 1;
-      }
-
-      .battery-container {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        cursor: pointer;
-        z-index: 2;
-        pointer-events: all;
-      }
-
-      .battery-container .tip {
-        opacity: 0;
-        visibility: hidden;
-        position: absolute;
-        padding: 6px 10px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.8);
-        background: rgba(30, 30, 30, 0.9);
-        color: white;
-        white-space: nowrap;
-        z-index: 5;
-        border-radius: 4px;
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
-        font-size: 14px;
-        pointer-events: none;
-      }
-
-      .battery-container:hover .tip {
-        opacity: 1;
-        visibility: visible;
-        transform: translate(-50%, -50%) scale(1);
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0s;
-      }
-
-      .battery-circle {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        transform: rotate(-90deg);
-        z-index: 2;
-      }
-
-      .battery-circle circle {
-        stroke-width: 4px;
-        stroke: var(--disabled-text-color, #888);
-        stroke-linecap: round;
-        fill: transparent;
-        transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
-      }
-
-      .header > img, .image-container img {
+      .header > img {
         border-radius: 50%;
         width: 88px;
         height: 88px;
         object-fit: cover;
-        position: relative;
-        z-index: 1;
+        margin-left: 16px;
+        margin-right: 16px;
+        margin-top: -28px;
+        float: left;
         box-shadow: var( --ha-card-box-shadow, 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2) );
         cursor: pointer;
       }
@@ -584,7 +522,6 @@ class FytaPlantCard extends HTMLElement {
         font-weight: bold;
         width: calc(100% - 120px);
         margin-top: 8px;
-        margin-left: 116px;
         text-transform: capitalize;
         display: block;
         cursor: pointer;
@@ -595,15 +532,12 @@ class FytaPlantCard extends HTMLElement {
         color: #8c96a5;
         display: block;
         cursor: pointer;
-        margin-left: 116px;
       }
 
       #battery {
         position: absolute;
         right: 16px;
         top: 16px;
-        font-size: 14px;
-        font-weight: bold;
       }
 
       .attributes {
@@ -765,16 +699,9 @@ class FytaPlantCard extends HTMLElement {
     
     content.innerHTML = `
       <div class="header">
-        <div class="image-container">
-          <img src="${this._plant_image}" @click="${this._click.bind(this, this._status_entities.plant_status)}">
-          <div class="battery-container" @click="${this._click.bind(this, this._sensor_entities.battery_entity)}">
-            <div class="tip" id="battery-tooltip"></div>
-            <svg class="battery-circle" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="44" id="battery-indicator" stroke-width="4" stroke-dasharray="276.46" stroke-dashoffset="0"></circle>
-            </svg>
-          </div>
-        </div>
+        <img src="${this._plant_image}" @click="${this._click.bind(this, this._status_entities.plant_status)}">
         <span id="name" style="color:${this._getStateColor("plant", hass)};" @click="${this._click.bind(this, this._status_entities.plant_status)}">${this.config.title}</span>
+        <span id="battery">${this._renderBattery(hass)}</span>
         <span id="species" @click="${this._click.bind(this, this._status_entities.plant_status)}">${hass.states[this._status_entities.plant_status].attributes.friendly_name || ""}</span>
       </div>
       <div class="divider"></div>
@@ -799,13 +726,6 @@ class FytaPlantCard extends HTMLElement {
       }
     });
 
-    // Call _renderBattery explicitly after the DOM is created
-    setTimeout(() => {
-      if (this._sensor_entities.battery_entity) {
-        this._renderBattery(hass);
-      }
-    }, 100);
-
     this._initialized = true;
   }
 
@@ -815,56 +735,31 @@ class FytaPlantCard extends HTMLElement {
     }
 
     const entity = this._sensor_entities.battery_entity;
-    if (!hass.states[entity]) {
+    const state = parseInt(hass.states[entity].state);
+    
+    // Only show battery if level is 10% or below
+    if (state > 10) {
       return "";
     }
     
-    const state = parseInt(hass.states[entity].state);
+    let icon = "mdi:battery-alert";
+    let color = "red";
+    let statusText = "Critical";
     
-    // Set color based on battery level
-    let color = "var(--success-color, #4CAF50)"; // Green for good levels
-    let statusText = "Good";
-    
-    if (state <= 10) {
-      color = "var(--error-color, #F44336)"; // Red for critical
+    if (state <= 5) {
+      icon = "mdi:battery-alert";
       statusText = "Critical";
-    } else if (state <= 20) {
-      color = "var(--error-color, #F44336)"; // Red for very low
-      statusText = "Very Low";
-    } else if (state <= 30) {
-      color = "var(--warning-color, #FFC107)"; // Yellow/orange for low
-      statusText = "Low";
-    } else if (state <= 50) {
-      color = "var(--success-color, #4CAF50)"; // Green for medium
-      statusText = "Medium";
     } else {
-      color = "var(--success-color, #4CAF50)"; // Green for high
-      statusText = "Good";
+      icon = "mdi:battery-10";
+      statusText = "Very Low";
     }
     
-    // Calculate the circle properties
-    const radius = 44;
-    const circumference = 2 * Math.PI * radius; // 2πr where r=44 from the SVG circle
-    const offset = circumference - (state / 100) * circumference;
-    
-    // Get the elements
-    const circle = this.shadowRoot.querySelector('#battery-indicator');
-    const tooltip = this.shadowRoot.querySelector('#battery-tooltip');
-    
-    // Update the circle properties and tooltip immediately
-    if (circle) {
-      // Apply the color and offset as inline styles and attributes for better browser compatibility
-      circle.style.stroke = color;
-      circle.style.strokeDasharray = `${circumference}`;
-      circle.style.strokeDashoffset = `${offset}`;
-      circle.setAttribute('stroke', color);
-    }
-    
-    if (tooltip) {
-      tooltip.innerHTML = `Battery: ${state}%<br>Status: ${statusText}`;
-    }
-    
-    return "";
+    return `
+      <div class="battery tooltip" @click="${this._click.bind(this, entity)}">
+        <div class="tip" style="text-align:center;">Battery: ${state}%<br>Status: ${statusText}</div>
+        <ha-icon icon="${icon}" style="color: ${color};"></ha-icon>
+      </div>
+    `;
   }
 
   _renderSensors(hass) {
@@ -1175,9 +1070,10 @@ class FytaPlantCard extends HTMLElement {
       nameElement.style.color = this._getStateColor("plant", hass);
     }
     
-    // Update battery circle
-    if (this._sensor_entities.battery_entity !== "") {
-      this._renderBattery(hass);
+    // Update battery
+    const batteryElement = this.shadowRoot.querySelector('#battery');
+    if (batteryElement) {
+      batteryElement.innerHTML = this._renderBattery(hass);
     }
     
     // Update sensor values - include all sensor types
@@ -1375,15 +1271,15 @@ export class FytaPlantCardEditor extends LitElement {
       title: "",
       display_mode: "full",
       show_light: true,
-      light_order: "1",
+      light_order: "2",
       show_moisture: true,
-      moisture_order: "2",
+      moisture_order: "1",
       show_temperature: true,
       temperature_order: "3",
-      show_salinity: true,
-      salinity_order: "4",
+      show_salinity: false,
+      salinity_order: "5",
       show_nutrition: true,
-      nutrition_order: "5"
+      nutrition_order: "4"
     };
     
     // Copy existing config
@@ -1481,15 +1377,15 @@ export class FytaPlantCardEditor extends LitElement {
       title: this.config.title || "",
       display_mode: this.config.display_mode || "full",
       show_light: this.config.show_light !== undefined ? this.config.show_light : true,
-      light_order: this.config.light_order || "1",
+      light_order: this.config.light_order || "2",
       show_moisture: this.config.show_moisture !== undefined ? this.config.show_moisture : true,
-      moisture_order: this.config.moisture_order || "2",
+      moisture_order: this.config.moisture_order || "1",
       show_temperature: this.config.show_temperature !== undefined ? this.config.show_temperature : true,
       temperature_order: this.config.temperature_order || "3",
-      show_salinity: this.config.show_salinity !== undefined ? this.config.show_salinity : true,
-      salinity_order: this.config.salinity_order || "4",
+      show_salinity: this.config.show_salinity !== undefined ? this.config.show_salinity : false,
+      salinity_order: this.config.salinity_order || "5",
       show_nutrition: this.config.show_nutrition !== undefined ? this.config.show_nutrition : true,
-      nutrition_order: this.config.nutrition_order || "5"
+      nutrition_order: this.config.nutrition_order || "4"
     };
 
     return html`
@@ -1514,15 +1410,15 @@ export class FytaPlantCardEditor extends LitElement {
       title: "",
       display_mode: "full",
       show_light: true,
-      light_order: "1",
+      light_order: "2",
       show_moisture: true,
-      moisture_order: "2",
+      moisture_order: "1",
       show_temperature: true,
       temperature_order: "3",
-      show_salinity: true,
-      salinity_order: "4",
+      show_salinity: false,
+      salinity_order: "5",
       show_nutrition: true,
-      nutrition_order: "5"
+      nutrition_order: "4"
     };
     
     // Copy values from provided config
@@ -1621,5 +1517,5 @@ window.customCards.push({
   type: "fyta-plant-card",
   name: "Fyta Plant Card",
   preview: true,
-  description: "Custom card for FYTA plant sensors with battery indicator and customizable layout"
+  description: "Custom card for your FYTA plant data"
 });
