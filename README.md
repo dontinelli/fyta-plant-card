@@ -39,7 +39,7 @@ The FYTA Plant Card displays data from the FYTA integration in Home Assistant, s
 
 ### HomeAssistant Integration
 
-This card requires the official [Home Assistant FYTA integration](https://www.home-assistant.io/integrations/fyta/). For more information about the integration, please refer to the [FYTA GitHub organization](https://github.com/FYTA-GmbH).
+This card requires the official [Home Assistant FYTA integration](https://www.home-assistant.io/integrations/fyta/). For more information about FYTA, please refer to the [FYTA GitHub page](https://github.com/FYTA-GmbH) or the [FYTA webpage](https://www.fyta.de).
 
 ## Installation
 
