@@ -192,9 +192,8 @@ class FytaPlantCard extends HTMLElement {
       battery_entity: "", 
       light_entity: "", 
       moisture_entity: "", 
-      salinity_entity: "", 
       temperature_entity: "",
-      ec_entity: ""
+      salinity_entity: ""
     };
     
     this._status_entities = { 
@@ -233,6 +232,22 @@ class FytaPlantCard extends HTMLElement {
       salinity_entity: "mdi:water-percent", 
       nutrition: "mdi:emoticon-poop"
     };
+    
+    // Short display units for the card
+    this._displayUnits = {
+      light_entity: "μmol", 
+      moisture_entity: "%",
+      temperature_entity: "°C",
+      salinity_entity: "mS"
+    };
+    
+    // Full units for tooltips
+    this._tooltipUnits = {
+      light_entity: "μmol/s⋅m²", 
+      moisture_entity: "%",
+      temperature_entity: "°C",
+      salinity_entity: "mS/cm"
+    };
   }
 
   _click(entity) {
@@ -264,8 +279,6 @@ class FytaPlantCard extends HTMLElement {
     } else if (key === 'moisture_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.moisture_status]?.state || "no_data"];
     } else if (key === 'salinity_entity') {
-      return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
-    } else if (key === 'ec_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.salinity_status]?.state || "no_data"];
     } else if (key === 'temperature_entity') {
       return this._measurementStatusColor[hass.states[this._status_entities.temperature_status]?.state || "no_data"];
@@ -311,17 +324,33 @@ class FytaPlantCard extends HTMLElement {
 
   set hass(hass) {
     if (!this.config) {
-      return html``;
+      return;
     }
+    
+    // If no device is specified, show a configuration prompt
     if (!this.config.device_id) {
-      return html`<hui-warning>No device specified</hui-warning>`;
+      if (!this.shadowRoot.lastChild || this.shadowRoot.lastChild.tagName !== 'HA-CARD') {
+        const card = document.createElement("ha-card");
+        card.header = "FYTA Plant Card";
+        card.innerHTML = `
+          <div class="card-content">
+            Please select a FYTA device in the card configuration.
+          </div>
+        `;
+        
+        if (this.shadowRoot.lastChild) {
+          this.shadowRoot.removeChild(this.shadowRoot.lastChild);
+        }
+        
+        this.shadowRoot.appendChild(card);
+      }
+      return;
     }
+    
     if (!this._initialized) {
       this.updateEntities(this.config.device_id, hass)
-    }
-
-    // On subsequent updates, we only need to update the display values and colors
-    if (this._initialized) {
+    } else {
+      // On subsequent updates, we only need to update the display values and colors
       this._updateDisplayValues(hass);
     }
   }
@@ -415,10 +444,6 @@ class FytaPlantCard extends HTMLElement {
     }
     
     this.config = newConfig;
-
-    if (!this.config.device_id) {
-      throw new Error("You need to define a device");
-    }
 
     if (this.config.device_id != oldDevice) {
       this._initialized = false;
@@ -753,17 +778,12 @@ class FytaPlantCard extends HTMLElement {
   }
 
   _renderSensors(hass) {
-    // Main sensor parameters - combine EC and salinity since EC is not separately configured
-    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity', 'ec_entity'];
+    // Main sensor parameters
+    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity'];
     const allSensors = [];
     
     // Filter sensors based on configuration
     const visibleSensors = sensorKeys.filter(key => {
-      // EC always shares the same setting as salinity
-      if (key === 'ec_entity') {
-        return this.config.show_salinity;
-      }
-      
       // Translate from entity key to config key
       const configKey = key === 'light_entity' ? 'show_light' :
                        key === 'moisture_entity' ? 'show_moisture' :
@@ -779,7 +799,7 @@ class FytaPlantCard extends HTMLElement {
         let sensorType = key === 'light_entity' ? 'light' :
                         key === 'moisture_entity' ? 'moisture' :
                         key === 'temperature_entity' ? 'temperature' :
-                        (key === 'salinity_entity' || key === 'ec_entity') ? 'salinity' : null;
+                        key === 'salinity_entity' ? 'salinity' : null;
                         
         const order = parseInt(this.config[`${sensorType}_order`] || "999");
                         
@@ -861,18 +881,15 @@ class FytaPlantCard extends HTMLElement {
       const entity = this._sensor_entities[key];
       const state = hass.states[entity].state;
       
-      // Get correct unit of measurement
-      let uom = hass.states[entity].attributes.unit_of_measurement || "";
-      // Special case for light to fix unit display
-      if (key === 'light_entity' && uom === 'μmol/s⋅m²') {
-        uom = 'μmol/h';
-      }
+      // Get proper units for display and tooltip
+      const displayUnit = this._displayUnits[key] || "";
+      const tooltipUnit = this._tooltipUnits[key] || "";
       
       // Get the proper status entity
       let statusEntity;
       let statusState = "";
       
-      if (key === 'salinity_entity' || key === 'ec_entity') {
+      if (key === 'salinity_entity') {
         statusEntity = this._status_entities.salinity_status;
         if (statusEntity) {
           statusState = hass.states[statusEntity].state;
@@ -909,18 +926,13 @@ class FytaPlantCard extends HTMLElement {
         }
       }
       
-      // Simplified tooltip content with current value and status
+      // Generate tooltip content with current value and status - use full unit
       const tooltipContent = statusEntity ? 
-        `${key.replace("_entity", "")}: ${state} ${uom}<br>Status: ${statusState.replace(/_/g, " ")}` :
-        `${key.replace("_entity", "")}: ${state} ${uom}`;
+        `${key.replace("_entity", "")}: ${state} ${tooltipUnit}<br>Status: ${statusState.replace(/_/g, " ")}` :
+        `${key.replace("_entity", "")}: ${state} ${tooltipUnit}`;
       
-      // Icon based on sensor type - for EC, use a flash icon
-      let icon;
-      if (key === 'ec_entity') {
-        icon = 'mdi:flash';
-      } else {
-        icon = this._icons[key];
-      }
+      // Icon based on sensor type
+      let icon = this._icons[key];
       
       return `
         <div class="attribute tooltip" @click="${this._click.bind(this, entity)}" data-entity="${entity}">
@@ -930,7 +942,7 @@ class FytaPlantCard extends HTMLElement {
             <span class="${meterClass}" style="width: ${meterPercentage}%;"></span>
           </div>
           <div class="sensor-value">${state}</div>
-          <div class="uom">${uom}</div>
+          <div class="uom">${displayUnit}</div>
         </div>
       `;
     };
@@ -1031,9 +1043,6 @@ class FytaPlantCard extends HTMLElement {
     } else if (hass.states[id].attributes.unit_of_measurement == 'μmol/s⋅m²') {
       const entityId = hass.states[id].entity_id;
       this._sensor_entities.light_entity = entityId;
-    } else if (hass.states[id].attributes.unit_of_measurement == 'mS/cm') {
-      const entityId = hass.states[id].entity_id;
-      this._sensor_entities.ec_entity = entityId;
     } else if (id.startsWith('image.')) {
       this._plant_image = hass.states[id].attributes.entity_picture;
     } else if (hass.states[id].attributes.device_class == 'enum') {
@@ -1067,82 +1076,91 @@ class FytaPlantCard extends HTMLElement {
     }
     
     // Update sensor values - include all sensor types
-    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity', 'ec_entity'];
+    const sensorKeys = ['light_entity', 'moisture_entity', 'temperature_entity', 'salinity_entity'];
     
     sensorKeys.forEach(key => {
-      if (this._sensor_entities[key] !== "") {
-        const entity = this._sensor_entities[key];
-        const sensorElement = this.shadowRoot.querySelector(`.attribute[data-entity="${entity}"]`);
+      const entity = this._sensor_entities[key];
+      
+      // Skip if no entity
+      if (entity === "") return;
+      
+      const sensorElement = this.shadowRoot.querySelector(`.attribute[data-entity="${entity}"]`);
+      
+      if (sensorElement) {
+        const state = hass.states[entity].state;
+        const iconElement = sensorElement.querySelector('ha-icon');
+        const valueElement = sensorElement.querySelector('.sensor-value');
+        const meterElement = sensorElement.querySelector('.meter span');
+        const uomElement = sensorElement.querySelector('.uom');
         
-        if (sensorElement) {
-          const state = hass.states[entity].state;
-          const iconElement = sensorElement.querySelector('ha-icon');
-          const valueElement = sensorElement.querySelector('.sensor-value');
-          const meterElement = sensorElement.querySelector('.meter span');
+        if (iconElement) {
+          iconElement.style.color = this._getStateColor(key, hass);
+        }
+        
+        if (valueElement) {
+          valueElement.textContent = state;
+        }
+        
+        if (uomElement) {
+          const displayUnit = this._displayUnits[key] || "";
+          uomElement.textContent = displayUnit;
+        }
+        
+        if (meterElement) {
+          // Get the proper status entity
+          let statusEntity;
+          let statusState = "";
           
-          if (iconElement) {
-            iconElement.style.color = this._getStateColor(key, hass);
+          if (key === 'salinity_entity') {
+            statusEntity = this._status_entities.salinity_status;
+            if (statusEntity) {
+              statusState = hass.states[statusEntity].state;
+            }
+          } else {
+            statusEntity = this._status_entities[key.replace("_entity", "_status")];
+            if (statusEntity) {
+              statusState = hass.states[statusEntity].state;
+            }
           }
           
-          if (valueElement) {
-            valueElement.textContent = state;
+          // Calculate meter width and class based on status
+          let meterPercentage = 50; // Default to mid-range if no status
+          let meterClass = "unavailable";
+          
+          if (statusState) {
+            if (statusState === "too_low") {
+              meterPercentage = 10;
+              meterClass = "bad";
+            } else if (statusState === "low") {
+              meterPercentage = 30;
+              meterClass = "warning";
+            } else if (statusState === "perfect") {
+              meterPercentage = 50;
+              meterClass = "good";
+            } else if (statusState === "high") {
+              meterPercentage = 70;
+              meterClass = "warning";
+            } else if (statusState === "too_high") {
+              meterPercentage = 90;
+              meterClass = "bad";
+            }
           }
           
-          if (meterElement) {
-            // Get the proper status entity
-            let statusEntity;
-            let statusState = "";
+          meterElement.className = meterClass;
+          meterElement.style.width = `${meterPercentage}%`;
+          
+          // Update tooltip with current values
+          const tooltipElement = sensorElement.querySelector('.tip');
+          if (tooltipElement) {
+            // Get full unit for tooltip
+            const tooltipUnit = this._tooltipUnits[key] || "";
             
-            if (key === 'salinity_entity' || key === 'ec_entity') {
-              statusEntity = this._status_entities.salinity_status;
-              if (statusEntity) {
-                statusState = hass.states[statusEntity].state;
-              }
-            } else {
-              statusEntity = this._status_entities[key.replace("_entity", "_status")];
-              if (statusEntity) {
-                statusState = hass.states[statusEntity].state;
-              }
-            }
+            // Tooltip content with full unit
+            const tooltipContent = statusEntity ? 
+              `${key.replace("_entity", "")}: ${state} ${tooltipUnit}<br>Status: ${statusState.replace(/_/g, " ")}` :
+              `${key.replace("_entity", "")}: ${state} ${tooltipUnit}`;
             
-            // Calculate meter width and class based on status
-            let meterPercentage = 50; // Default to mid-range if no status
-            let meterClass = "unavailable";
-            
-            if (statusState) {
-              if (statusState === "too_low") {
-                meterPercentage = 10;
-                meterClass = "bad";
-              } else if (statusState === "low") {
-                meterPercentage = 30;
-                meterClass = "warning";
-              } else if (statusState === "perfect") {
-                meterPercentage = 50;
-                meterClass = "good";
-              } else if (statusState === "high") {
-                meterPercentage = 70;
-                meterClass = "warning";
-              } else if (statusState === "too_high") {
-                meterPercentage = 90;
-                meterClass = "bad";
-              }
-            }
-            
-            meterElement.className = meterClass;
-            meterElement.style.width = `${meterPercentage}%`;
-            
-            // Update tooltip with current values
-            const tooltipElement = sensorElement.querySelector('.tip');
-            if (tooltipElement) {
-              const uom = hass.states[entity].attributes.unit_of_measurement || "";
-              
-              // Simplified tooltip content
-              const tooltipContent = statusEntity ? 
-                `${key.replace("_entity", "")}: ${state} ${uom}<br>Status: ${statusState.replace(/_/g, " ")}` :
-                `${key.replace("_entity", "")}: ${state} ${uom}`;
-              
-              tooltipElement.innerHTML = tooltipContent;
-            }
+            tooltipElement.innerHTML = tooltipContent;
           }
         }
       }
