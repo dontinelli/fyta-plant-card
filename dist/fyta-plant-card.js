@@ -233,22 +233,6 @@ class FytaPlantCard extends HTMLElement {
       salinity_entity: "mdi:water-percent", 
       nutrition: "mdi:emoticon-poop"
     };
-    
-    // Short display units for the card
-    this._displayUnits = {
-      light_entity: "μmol", 
-      moisture_entity: "%",
-      temperature_entity: "°C",
-      salinity_entity: "mS"
-    };
-    
-    // Full units for tooltips
-    this._tooltipUnits = {
-      light_entity: "μmol/s⋅m²", 
-      moisture_entity: "%",
-      temperature_entity: "°C",
-      salinity_entity: "mS/cm"
-    };
   }
 
   _click(entity) {
@@ -916,23 +900,17 @@ class FytaPlantCard extends HTMLElement {
       const state = hass.states[entity].state;
       
       // Get proper units for display and tooltip
-      const displayUnit = this._displayUnits[key] || "";
-      const tooltipUnit = this._tooltipUnits[key] || "";
+      const entityUnit = hass.states[entity].attributes.unit_of_measurement || "";
+      const displayUnit = this._formatDisplayUnit(entityUnit);
+      const tooltipUnit = entityUnit;
       
       // Get the proper status entity
       let statusEntity;
       let statusState = "";
       
-      if (key === 'salinity_entity') {
-        statusEntity = this._status_entities.salinity_status;
-        if (statusEntity) {
-          statusState = hass.states[statusEntity].state;
-        }
-      } else {
-        statusEntity = this._status_entities[key.replace("_entity", "_status")];
-        if (statusEntity) {
-          statusState = hass.states[statusEntity].state;
-        }
+      statusEntity = this._status_entities[key.replace("_entity", "_status")];
+      if (statusEntity) {
+        statusState = hass.states[statusEntity].state;
       }
       
       const color = this._getStateColor(key, hass);
@@ -1164,7 +1142,9 @@ class FytaPlantCard extends HTMLElement {
         }
         
         if (uomElement) {
-          const displayUnit = this._displayUnits[key] || "";
+          // Get unit from entity and simplify for display
+          const entityUnit = hass.states[entity].attributes.unit_of_measurement || "";
+          const displayUnit = this._formatDisplayUnit(entityUnit);
           uomElement.textContent = displayUnit;
         }
         
@@ -1173,16 +1153,9 @@ class FytaPlantCard extends HTMLElement {
           let statusEntity;
           let statusState = "";
           
-          if (key === 'salinity_entity') {
-            statusEntity = this._status_entities.salinity_status;
-            if (statusEntity) {
-              statusState = hass.states[statusEntity].state;
-            }
-          } else {
-            statusEntity = this._status_entities[key.replace("_entity", "_status")];
-            if (statusEntity) {
-              statusState = hass.states[statusEntity].state;
-            }
+          statusEntity = this._status_entities[key.replace("_entity", "_status")];
+          if (statusEntity) {
+            statusState = hass.states[statusEntity].state;
           }
           
           // Calculate meter width and class based on status
@@ -1214,8 +1187,8 @@ class FytaPlantCard extends HTMLElement {
           // Update tooltip with current values
           const tooltipElement = sensorElement.querySelector('.tip');
           if (tooltipElement) {
-            // Get full unit for tooltip
-            const tooltipUnit = this._tooltipUnits[key] || "";
+            // Use full unit for tooltip
+            const tooltipUnit = hass.states[entity].attributes.unit_of_measurement || "";
             
             // Tooltip content with full unit
             const tooltipContent = statusEntity ? 
@@ -1302,6 +1275,13 @@ class FytaPlantCard extends HTMLElement {
         }
       }
     }
+  }
+
+  // Format unit for card display (only show part before "/" if it exists)
+  _formatDisplayUnit(unit) {
+    if (!unit) return "";
+    const parts = unit.split("/");
+    return parts[0];
   }
 }
 
