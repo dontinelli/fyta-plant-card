@@ -1288,22 +1288,6 @@ class FytaPlantCard extends HTMLElement {
 customElements.define("fyta-plant-card", FytaPlantCard);
 
 
-function deepClone(value) {
-  if (!(!!value && typeof value === "object")) {
-    return value;
-  }
-  if (Object.prototype.toString.call(value) === "[object Date]") {
-    return new Date(value.getTime());
-  }
-  if (Array.isArray(value)) {
-    return value.map(deepClone);
-  }
-  var result = {};
-  Object.keys(value).forEach(
-    function(key) { result[String(key)] = deepClone(value[String(key)]); });
-  return result;
-}
-
 export class FytaPlantCardEditor extends LitElement {
 
   static properties = {
