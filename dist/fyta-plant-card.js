@@ -202,7 +202,8 @@ class FytaPlantCard extends HTMLElement {
       moisture_status: "", 
       salinity_status: "", 
       nutrients_status: "", 
-      temperature_status: "" 
+      temperature_status: "",
+      fertilise_next: ""
     };
     
     // Improved color scheme for plant status
@@ -287,6 +288,39 @@ class FytaPlantCard extends HTMLElement {
     }
     
     return "var(--primary-text-color, white)";
+  }
+
+  // Format date for display (remove time component)
+  _formatDateForDisplay(dateStr) {
+    if (!dateStr) return "";
+    
+    // If date contains a T (ISO format), split and return just the date part
+    if (dateStr.includes('T')) {
+      return dateStr.split('T')[0];
+    }
+    
+    return dateStr;
+  }
+
+  // Calculate days until fertilization
+  _calculateDaysUntilFertilization(fertDate) {
+    if (!fertDate) return null;
+    
+    // Create Date object for the current date - use local midnight
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    // Create Date object for the fertilization date
+    // Make sure to handle ISO format (YYYY-MM-DDThh:mm:ss)
+    const endDate = new Date(fertDate);
+    
+    // Calculate time difference in milliseconds
+    const timeDifference = endDate.getTime() - currentDate.getTime();
+    
+    // Convert milliseconds to days
+    const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+    
+    return daysDifference;
   }
 
   getCardSize() {
@@ -953,6 +987,16 @@ class FytaPlantCard extends HTMLElement {
       const statusState = hass.states[statusEntity].state;
       const color = this._measurementStatusColor[statusState || "no_data"];
       
+      // Get next fertilization date if available
+      const fertiliseEntity = this._status_entities.fertilise_next;
+      let daysUntilFertilization = null;
+      let fertDateStr = null;
+      
+      if (fertiliseEntity && hass.states[fertiliseEntity]) {
+        fertDateStr = hass.states[fertiliseEntity].state;
+        daysUntilFertilization = this._calculateDaysUntilFertilization(fertDateStr);
+      }
+      
       let meterPercentage = 50;
       let meterClass = "unavailable";
       
@@ -975,8 +1019,21 @@ class FytaPlantCard extends HTMLElement {
         }
       }
       
-      // Always show empty value for nutrition
-      const tooltipContent = `Nutrition Status: ${statusState.replace(/_/g, " ")}`;
+      // Build tooltip content
+      let tooltipContent = `Nutrition Status: ${statusState.replace(/_/g, " ")}`;
+      if (daysUntilFertilization !== null) {
+        const daysText = daysUntilFertilization === 1 ? "day" : "days";
+        tooltipContent += `<br>Fertilize in: ${daysUntilFertilization} ${daysText}`;
+        if (fertDateStr) {
+          tooltipContent += `<br>Date: ${this._formatDateForDisplay(fertDateStr)}`;
+        }
+      }
+      
+      // Format days display
+      let daysDisplay = "";
+      if (daysUntilFertilization !== null) {
+        daysDisplay = daysUntilFertilization.toString();
+      }
       
       return `
         <div class="attribute tooltip" @click="${this._click.bind(this, statusEntity)}" data-entity="${statusEntity}">
@@ -985,8 +1042,8 @@ class FytaPlantCard extends HTMLElement {
           <div class="meter">
             <span class="${meterClass}" style="width: ${meterPercentage}%;"></span>
           </div>
-          <div class="sensor-value"></div>
-          <div class="uom"></div>
+          <div class="sensor-value">${daysDisplay}</div>
+          <div class="uom">days</div>
         </div>
       `;
     };
@@ -1045,6 +1102,11 @@ class FytaPlantCard extends HTMLElement {
       this._sensor_entities.light_entity = entityId;
     } else if (id.startsWith('image.')) {
       this._plant_image = hass.states[id].attributes.entity_picture;
+    } else if (hass.states[id].attributes.device_class == 'date' && 
+              (id.includes('fertilise_next') || id.includes('next_fertilization'))) {
+      // Capture the next fertilization date entity - support both naming patterns
+      const entityId = hass.states[id].entity_id;
+      this._status_entities.fertilise_next = entityId;
     } else if (hass.states[id].attributes.device_class == 'enum') {
       if (hass.entities[id].translation_key === 'plant_status') {
         this._status_entities.plant_status = hass.states[id].entity_id;
@@ -1176,9 +1238,24 @@ class FytaPlantCard extends HTMLElement {
         const statusState = hass.states[statusEntity].state;
         const iconElement = nutritionElement.querySelector('ha-icon');
         const meterElement = nutritionElement.querySelector('.meter span');
+        const valueElement = nutritionElement.querySelector('.sensor-value');
+        
+        // Get next fertilization date if available
+        const fertiliseEntity = this._status_entities.fertilise_next;
+        let daysUntilFertilization = null;
+        let fertDateStr = null;
+        
+        if (fertiliseEntity && hass.states[fertiliseEntity]) {
+          fertDateStr = hass.states[fertiliseEntity].state;
+          daysUntilFertilization = this._calculateDaysUntilFertilization(fertDateStr);
+        }
         
         if (iconElement) {
           iconElement.style.color = this._measurementStatusColor[statusState || "no_data"];
+        }
+        
+        if (valueElement) {
+          valueElement.textContent = daysUntilFertilization !== null ? daysUntilFertilization.toString() : "";
         }
         
         if (meterElement) {
@@ -1213,7 +1290,14 @@ class FytaPlantCard extends HTMLElement {
         const tooltipElement = nutritionElement.querySelector('.tip');
         if (tooltipElement) {
           // Build tooltip
-          const tooltipContent = `Nutrition Status: ${statusState.replace(/_/g, " ")}`;
+          let tooltipContent = `Nutrition Status: ${statusState.replace(/_/g, " ")}`;
+          if (daysUntilFertilization !== null) {
+            const daysText = daysUntilFertilization === 1 ? "day" : "days";
+            tooltipContent += `<br>Fertilize in: ${daysUntilFertilization} ${daysText}`;
+            if (fertDateStr) {
+              tooltipContent += `<br>Date: ${this._formatDateForDisplay(fertDateStr)}`;
+            }
+          }
           tooltipElement.innerHTML = tooltipContent;
         }
       }
