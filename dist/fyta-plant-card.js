@@ -5,10 +5,11 @@ const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
 const SCHEMA = [
-  { name: "title", selector: { text: {} } },
-  { name: "device_id", required: true, selector: { device: { integration: 'fyta' } } },
+  { name: "title", label: "Title (Optional)", selector: { text: {} } },
+  { name: "device_id", label: "Device (Required)", required: true, selector: { device: { integration: 'fyta' } } },
   {
     name: "display_mode",
+    label: "Display Mode",
     selector: {
       select: {
         options: [
@@ -25,11 +26,13 @@ const SCHEMA = [
     schema: [
       { 
         name: "show_light", 
+        label: "Show Light Status",
         selector: { boolean: {} }, 
         required: false,
       },
       {
         name: "light_order",
+        label: "Light Order",
         selector: {
           select: {
             options: [
@@ -51,11 +54,13 @@ const SCHEMA = [
     schema: [
       { 
         name: "show_moisture", 
+        label: "Show Moisture Status",
         selector: { boolean: {} }, 
         required: false,
       },
       {
         name: "moisture_order",
+        label: "Moisture Order",
         selector: {
           select: {
             options: [
@@ -77,11 +82,13 @@ const SCHEMA = [
     schema: [
       { 
         name: "show_temperature", 
+        label: "Show Temperature Status",
         selector: { boolean: {} }, 
         required: false,
       },
       {
         name: "temperature_order",
+        label: "Temperature Order",
         selector: {
           select: {
             options: [
@@ -103,11 +110,13 @@ const SCHEMA = [
     schema: [
       { 
         name: "show_nutrition", 
+        label: "Show Nutrition Score",
         selector: { boolean: {} }, 
-        required: false,
+        required: false
       },
       {
         name: "nutrition_order",
+        label: "Nutrition Order",
         selector: {
           select: {
             options: [
@@ -124,17 +133,25 @@ const SCHEMA = [
       }
     ]
   },
+  { 
+    name: "nutrition_info",
+    type: "constant",
+    label: "Nutrition and Salinity",
+    value: "The Nutrition Score combines multiple measurements (salinity, conductivity, growth data and fertilization timing) into a single metric. Showing salinity separately is generally not needed as it's already included in this score."
+  },
   {
     type: "grid",
     schema: [
       { 
         name: "show_salinity", 
+        label: "Show Salinity Status",
         selector: { boolean: {} }, 
         required: false,
         default: false
       },
       {
         name: "salinity_order",
+        label: "Salinity Order",
         selector: {
           select: {
             options: [
@@ -150,12 +167,6 @@ const SCHEMA = [
         default: "5"
       }
     ]
-  },
-  {
-    type: "info",
-    name: "",
-    label: "Display Order Info",
-    description: "The sensor with the highest order number will appear full-width at the bottom when you have an odd number of visible sensors."
   }
 ];
 
@@ -1278,22 +1289,11 @@ export class FytaPlantCardEditor extends LitElement {
   get _device_id() {
     return this.config?.device_id || '';
   }
-
+  
   _computeLabel(schema) {
-    if (schema.name == 'device_id') return 'Device (Required)';
-    if (schema.name == 'title') return 'Title (Optional)';
-    if (schema.name == 'display_mode') return 'Display Mode';
-    if (schema.name == 'show_light') return 'Show Light Status';
-    if (schema.name == 'light_order') return 'Light Order';
-    if (schema.name == 'show_moisture') return 'Show Moisture Status';
-    if (schema.name == 'moisture_order') return 'Moisture Order';
-    if (schema.name == 'show_temperature') return 'Show Temperature Status';
-    if (schema.name == 'temperature_order') return 'Temperature Order';
-    if (schema.name == 'show_salinity') return 'Show Salinity Status (Not recommended - already included in Nutrition Score)';
-    if (schema.name == 'salinity_order') return 'Salinity Order';
-    if (schema.name == 'show_nutrition') return 'Show Nutrition Score (Recommended - includes salinity, growth index and fertilization)';
-    if (schema.name == 'nutrition_order') return 'Nutrition Order';
-    return schema.name;
+    // The schema already has labels, but for grids we need this function
+    // to ensure proper display of field names
+    return schema.label || schema.name;
   }
 
   _valueChanged(ev) {
