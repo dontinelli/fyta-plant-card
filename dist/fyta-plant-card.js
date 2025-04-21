@@ -411,26 +411,6 @@ class FytaPlantCard extends HTMLElement {
       });
     }
     
-    // Handle legacy config with sensor_order
-    if (config && config.sensor_order && config.sensor_order !== 'default') {
-      // Map from old-style ordering to new order values
-      const orderMap = {
-        'l': 'light',
-        'm': 'moisture',
-        't': 'temperature',
-        's': 'salinity',
-        'n': 'nutrition'
-      };
-      
-      const order = config.sensor_order.split('');
-      order.forEach((letter, index) => {
-        if (orderMap[letter]) {
-          const sensorType = orderMap[letter];
-          newConfig[`${sensorType}_order`] = String(index + 1);
-        }
-      });
-    }
-    
     // Handle legacy config with priority or position values
     const sensorTypes = ['light', 'moisture', 'temperature', 'salinity', 'nutrition'];
     sensorTypes.forEach(type => {
@@ -1309,9 +1289,9 @@ export class FytaPlantCardEditor extends LitElement {
     if (schema.name == 'moisture_order') return 'Moisture Order';
     if (schema.name == 'show_temperature') return 'Show Temperature Status';
     if (schema.name == 'temperature_order') return 'Temperature Order';
-    if (schema.name == 'show_salinity') return 'Show Salinity Status';
+    if (schema.name == 'show_salinity') return 'Show Salinity Status (Not recommended - already included in Nutrition Score)';
     if (schema.name == 'salinity_order') return 'Salinity Order';
-    if (schema.name == 'show_nutrition') return 'Show Nutrition';
+    if (schema.name == 'show_nutrition') return 'Show Nutrition Score (Recommended - includes salinity, growth index and fertilization)';
     if (schema.name == 'nutrition_order') return 'Nutrition Order';
     return schema.name;
   }
@@ -1489,26 +1469,6 @@ export class FytaPlantCardEditor extends LitElement {
         }
       });
       
-      // Handle legacy config with sensor_order
-      if (config.sensor_order && config.sensor_order !== 'default') {
-        // Map from old-style ordering to new order values
-        const orderMap = {
-          'l': 'light',
-          'm': 'moisture',
-          't': 'temperature',
-          's': 'salinity',
-          'n': 'nutrition'
-        };
-        
-        const order = config.sensor_order.split('');
-        order.forEach((letter, index) => {
-          if (orderMap[letter]) {
-            const sensorType = orderMap[letter];
-            newConfig[`${sensorType}_order`] = String(index + 1);
-          }
-        });
-      }
-      
       // Handle legacy config with priority or position values
       const sensorTypes = ['light', 'moisture', 'temperature', 'salinity', 'nutrition'];
       sensorTypes.forEach(type => {
@@ -1547,7 +1507,7 @@ export class FytaPlantCardEditor extends LitElement {
       newConfig.show_light = true;
       newConfig.show_moisture = true;
       newConfig.show_temperature = true;
-      newConfig.show_salinity = true;
+      newConfig.show_salinity = false;
       newConfig.show_nutrition = true;
     }
 
