@@ -22,6 +22,20 @@ const SCHEMA = [
     default: "full"
   },
   {
+    name: "battery_threshold",
+    label: "Battery Display Threshold (%)",
+    description: "Battery icon will only appear when battery level is at or below this percentage. Set to 100 to always show, 0 to never show.",
+    selector: {
+      number: {
+        min: 0,
+        max: 100,
+        step: 5,
+        mode: "slider"
+      }
+    },
+    default: 10
+  },
+  {
     type: "grid",
     schema: [
       {
@@ -181,6 +195,7 @@ class FytaPlantCard extends HTMLElement {
       device_id: "",
       title: "",
       display_mode: "full",
+      battery_threshold: 10,
       show_light: true,
       light_order: "2",
       show_moisture: true,
@@ -396,6 +411,7 @@ class FytaPlantCard extends HTMLElement {
       device_id: "",
       title: "",
       display_mode: "full",
+      battery_threshold: 10,
       show_light: true,
       light_order: "2",
       show_moisture: true,
@@ -478,6 +494,7 @@ class FytaPlantCard extends HTMLElement {
         device_id: this.config.device_id || "",
         title: device_name,
         display_mode: this.config.display_mode || "full",
+        battery_threshold: this.config.battery_threshold || 10,
         show_light: this.config.show_light !== undefined ? this.config.show_light : true,
         light_order: this.config.light_order || "2",
         show_moisture: this.config.show_moisture !== undefined ? this.config.show_moisture : true,
@@ -770,21 +787,47 @@ class FytaPlantCard extends HTMLElement {
     const entity = this._sensor_entities.battery_entity;
     const state = parseInt(hass.states[entity].state);
 
-    // Only show battery if level is 10% or below
-    if (state > 10) {
+    // Check against the user-configured threshold
+    const threshold = this.config?.battery_threshold ?? 10;
+
+    // Only show battery if level is at or below the threshold
+    // Skip showing if threshold is 0 (never show)
+    if (threshold === 0 || state > threshold) {
       return "";
     }
 
     let icon = "mdi:battery-alert";
-    let color = "red";
+    let color = "var(--error-color, #F44336)"; // Default to error color
     let statusText = "Critical";
 
     if (state <= 5) {
       icon = "mdi:battery-alert";
+      color = "var(--error-color, #F44336)"; // Red for critical
       statusText = "Critical";
-    } else {
+    } else if (state <= 10) {
       icon = "mdi:battery-10";
+      color = "var(--error-color, #F44336)"; // Red for very low
       statusText = "Very Low";
+    } else if (state <= 20) {
+      icon = "mdi:battery-20";
+      color = "var(--warning-color, #FFC107)"; // Amber for low
+      statusText = "Low";
+    } else if (state <= 30) {
+      icon = "mdi:battery-30";
+      color = "var(--warning-color, #FFC107)"; // Amber for low
+      statusText = "Low";
+    } else if (state <= 50) {
+      icon = "mdi:battery-50";
+      color = "var(--success-color, #4CAF50)"; // Green for medium
+      statusText = "Medium";
+    } else if (state <= 80) {
+      icon = "mdi:battery-80";
+      color = "var(--success-color, #4CAF50)"; // Green for good
+      statusText = "Good";
+    } else {
+      icon = "mdi:battery";
+      color = "var(--success-color, #4CAF50)"; // Green for full
+      statusText = "Full";
     }
 
     return `
@@ -1315,6 +1358,7 @@ export class FytaPlantCardEditor extends LitElement {
       device_id: "",
       title: "",
       display_mode: "full",
+      battery_threshold: 10,
       show_light: true,
       light_order: "2",
       show_moisture: true,
@@ -1420,6 +1464,7 @@ export class FytaPlantCardEditor extends LitElement {
       device_id: this.config.device_id || "",
       title: this.config.title || "",
       display_mode: this.config.display_mode || "full",
+      battery_threshold: this.config.battery_threshold !== undefined ? this.config.battery_threshold : 10,
       show_light: this.config.show_light !== undefined ? this.config.show_light : true,
       light_order: this.config.light_order || "2",
       show_moisture: this.config.show_moisture !== undefined ? this.config.show_moisture : true,
@@ -1453,6 +1498,7 @@ export class FytaPlantCardEditor extends LitElement {
       device_id: "",
       title: "",
       display_mode: "full",
+      battery_threshold: 10,
       show_light: true,
       light_order: "2",
       show_moisture: true,
