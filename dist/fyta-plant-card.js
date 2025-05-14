@@ -855,8 +855,8 @@ class FytaPlantCard extends HTMLElement {
   }
 
   _renderBattery(hass) {
-    if (this._sensorEntityIds.battery === "") {
-      return "";
+    if (this._sensorEntityIds.battery === '') {
+      return '';
     }
 
     const entityId = this._sensorEntityIds.battery;
@@ -868,42 +868,25 @@ class FytaPlantCard extends HTMLElement {
     // Only show battery if level is at or below the threshold
     // Skip showing if threshold is 0 (never show)
     if (threshold === 0 || state > threshold) {
-      return "";
+      return '';
     }
 
-    let icon = "mdi:battery-alert";
-    let color = "var(--error-color, #F44336)"; // Default to error color
-    let statusText = "Critical";
+    const thresholdLevels = [
+      { threshold: 91, icon: 'mdi:battery', color: 'var(--success-color, #4CAF50)', statusText: 'Full' },
+      { threshold: 81, icon: 'mdi:battery-90', color: 'var(--success-color, #4CAF50)', statusText: 'Good' },
+      { threshold: 71, icon: 'mdi:battery-80', color: 'var(--success-color, #4CAF50)', statusText: 'Good' },
+      { threshold: 61, icon: 'mdi:battery-70', color: 'var(--success-color, #4CAF50)', statusText: 'Good' },
+      { threshold: 51, icon: 'mdi:battery-60', color: 'var(--success-color, #4CAF50)', statusText: 'Good' },
+      { threshold: 41, icon: 'mdi:battery-50', color: 'var(--success-color, #4CAF50)', statusText: 'Medium' },
+      { threshold: 31, icon: 'mdi:battery-40', color: 'var(--success-color, #4CAF50)', statusText: 'Medium' },
+      { threshold: 21, icon: 'mdi:battery-30', color: 'var(--warning-color, #FFC107)', statusText: 'Low' },
+      { threshold: 11, icon: 'mdi:battery-20', color: 'var(--warning-color, #FFC107)', statusText: 'Low' },
+      { threshold: 6, icon: 'mdi:battery-10', color: 'var(--error-color, #F44336)', statusText: 'Very Low' },
+      { threshold: 0, icon: 'mdi:battery-alert', color: 'var(--error-color, #F44336)', statusText: 'Critical' },
+      { threshold: -Infinity, icon: 'mdi:battery-alert-variant-outline', color: 'var(--error-color, #F44336)', statusText: 'Unknown' },
+    ];
 
-    if (state <= 5) {
-      icon = "mdi:battery-alert";
-      color = "var(--error-color, #F44336)"; // Red for critical
-      statusText = "Critical";
-    } else if (state <= 10) {
-      icon = "mdi:battery-10";
-      color = "var(--error-color, #F44336)"; // Red for very low
-      statusText = "Very Low";
-    } else if (state <= 20) {
-      icon = "mdi:battery-20";
-      color = "var(--warning-color, #FFC107)"; // Amber for low
-      statusText = "Low";
-    } else if (state <= 30) {
-      icon = "mdi:battery-30";
-      color = "var(--warning-color, #FFC107)"; // Amber for low
-      statusText = "Low";
-    } else if (state <= 50) {
-      icon = "mdi:battery-50";
-      color = "var(--success-color, #4CAF50)"; // Green for medium
-      statusText = "Medium";
-    } else if (state <= 80) {
-      icon = "mdi:battery-80";
-      color = "var(--success-color, #4CAF50)"; // Green for good
-      statusText = "Good";
-    } else {
-      icon = "mdi:battery";
-      color = "var(--success-color, #4CAF50)"; // Green for full
-      statusText = "Full";
-    }
+    const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => state >= threshold) ||  { icon: 'mdi:battery-alert-variant-outline', color: 'var(--error-color, #F44336)', statusText: 'Unknown' };
 
     return `
       <div class="battery tooltip" @click="${this._click.bind(this, entityId)}">
