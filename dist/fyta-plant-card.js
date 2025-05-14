@@ -146,7 +146,7 @@ const SCHEMA = [
     schema: [
       {
         name: 'show_temperature',
-        label: 'Temperature',
+        label: 'Ambient Temperature',
         selector: { boolean: {} },
       },
       {
@@ -290,7 +290,7 @@ const SENSOR_SETTINGS = {
     min: 0,
     max: 50,
     icon: 'mdi:thermometer',
-    name: 'Temperature',
+    name: 'Ambient Temperature',
   },
   [SENSOR_TYPES.Salinity]: {
     icon: 'mdi:water-percent',
