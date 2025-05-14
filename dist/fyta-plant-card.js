@@ -4,6 +4,15 @@ const LitElement = Object.getPrototypeOf(
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
+const MEASUREMENT_STATUS_STATES = {
+  NoData: 'no_data',
+  TooLow: 'too_low',
+  Low: 'low',
+  Perfect: 'perfect',
+  High: 'high',
+  TooHigh: 'too_high',
+};
+
 const ORDER_OPTIONS = [
   { label: "Order 1 (First)", value: "1" },
   { label: "Order 2", value: "2" },
@@ -161,6 +170,57 @@ const SCHEMA = [
     ]
   }
 ];
+
+const SENSOR_TYPES = {
+  Battery: 'battery',
+  FertilizedLast: 'fertilizedLast',
+  FertilizedNext: 'fertilizedNext',
+  Light: 'light',
+  LightState: 'light',
+  Moisture: 'moisture',
+  MoistureState: 'moisture',
+  Nutrients: 'nutrients',
+  NutrientsState: 'nutrients',
+  PlantState: 'plant',
+  Salinity: 'salinity',
+  SalinityState: 'salinity',
+  ScientificName: 'scientificName',
+  Temperature: 'temperature',
+  TemperatureState: 'temperature',
+};
+
+const SENSOR_SETTINGS = {
+  [SENSOR_TYPES.Battery]: {
+    min: 0,
+    max: 100,
+    icon: 'mdi:battery',
+    name: 'Battery',
+  },
+  [SENSOR_TYPES.Light]: {
+    icon: 'mdi:white-balance-sunny',
+    name: 'Light',
+  },
+  [SENSOR_TYPES.Moisture]: {
+    min: 0,
+    max: 100,
+    icon: 'mdi:water',
+    name: 'Soil Moisture',
+  },
+  [SENSOR_TYPES.Nutrients]: {
+    icon: 'mdi:emoticon-poop',
+    name: 'Nutrition',
+  },
+  [SENSOR_TYPES.Temperature]: {
+    min: 0,
+    max: 50,
+    icon: 'mdi:thermometer',
+    name: 'Temperature',
+  },
+  [SENSOR_TYPES.Salinity]: {
+    icon: 'mdi:water-percent',
+    name: 'Salinity',
+  },
+};
 
 const SUPPORTED_SENSORS = [
   "light",
@@ -913,25 +973,31 @@ class FytaPlantCard extends HTMLElement {
     `;
   }
 
-  _convertStatusToMeterValues(statusState) {
+  _calculateMeterState(sensorSettings, sensorState, statusState) {
+    let percentage = null;
+    if (sensorState !== null && sensorSettings.min !== null && sensorSettings.max != null) {
+      const calculatedPercentage = (sensorState - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
+      percentage = Math.max(0, Math.min(100100, calculatedPercentage));
+    }
+
     switch (statusState) {
-      case "too_low": {
-        return { percentage: 10, class: "bad" };
+      case MEASUREMENT_STATUS_STATES.TooLow: {
+        return { percentage: percentage !== null ? percentage : 10, class: 'bad' };
       }
-      case "low": {
-        return { percentage: 30, class: "warning" };
+      case MEASUREMENT_STATUS_STATES.Low: {
+        return { percentage: percentage !== null ? percentage : 30, class: 'warning' };
       }
-      case "perfect": {
-        return { percentage: 50, class: "good" };
+      case MEASUREMENT_STATUS_STATES.Perfect: {
+        return { percentage: percentage !== null ? percentage : 50, class: 'good' };
       }
-      case "high": {
-        return { percentage: 70, class: "warning" };
+      case MEASUREMENT_STATUS_STATES.High: {
+        return { percentage: percentage !== null ? percentage : 70, class: 'warning' };
       }
-      case "too_high": {
-        return { percentage: 90, class: "bad" };
+      case MEASUREMENT_STATUS_STATES.TooHigh: {
+        return { percentage: percentage !== null ? percentage : 90, class: 'bad' };
       }
       default: {
-        return { percentage: 50, class: "unavailable" };
+        return { percentage: 0, class: 'unavailable' };
       }
     }
   }
@@ -1049,9 +1115,10 @@ class FytaPlantCard extends HTMLElement {
       }
 
       const color = this._getStateColor(sensorType, hass);
+      const sensorSettings = SENSOR_SETTINGS[sensorType];
 
       // Calculate meter width and class based on status
-      const meterValues = this._convertStatusToMeterValues(statusState);
+      const meterState = this._calculateMeterState(sensorSettings, sensorState, statusState);
 
       // Generate tooltip content with current value and status - use full unit
       const sensorName = `${sensorType.charAt(0).toUpperCase()}${sensorType.slice(1)}`;
@@ -1065,7 +1132,7 @@ class FytaPlantCard extends HTMLElement {
           <div class="tip" style="text-align:center;">${tooltipContent}</div>
           <ha-icon icon="${icon}" style="color:${color};"></ha-icon>
           <div class="meter">
-            <span class="${meterValues.class}" style="width: ${meterValues.percentage}%;"></span>
+            <span class="${meterState.class}" style="width: ${meterState.percentage}%;"></span>
           </div>
           <div class="sensor-value">${sensorState}</div>
           <div class="uom">${this._formatDisplayUnit(entityUnit)}</div>
@@ -1096,7 +1163,7 @@ class FytaPlantCard extends HTMLElement {
       }
 
       // Format the next fertilization date for display
-      const meterValues = this._convertStatusToMeterValues(statusState);
+      const meterState = this._calculateMeterState(SENSOR_SETTINGS.Nutrients, null, statusState);
 
       // Build tooltip content
       const tooltipContent = this._buildNutritionTooltipContent(statusState, daysUntilFertilization, lastFertilizationDateString, nextFertilizationDateString);
@@ -1107,7 +1174,7 @@ class FytaPlantCard extends HTMLElement {
           <div class="tip" style="text-align:center;">${tooltipContent}</div>
           <ha-icon icon="${this._icons.nutrition}" style="color:${color};"></ha-icon>
           <div class="meter">
-            <span class="${meterValues.class}" style="width: ${meterValues.percentage}%;"></span>
+            <span class="${meterState.class}" style="width: ${meterState.percentage}%;"></span>
           </div>
           <div class="sensor-value">${sensorValue}</div>
           <div class="uom">${Math.abs(daysUntilFertilization) === 1 ? "day" : "days"}</div>
@@ -1180,7 +1247,8 @@ class FytaPlantCard extends HTMLElement {
       const sensorElement = this.shadowRoot.querySelector(`.attribute[data-entity="${entityId}"]`);
 
       if (sensorElement) {
-        const state = hass.states[entityId].state;
+        const sensorSettings = SENSOR_SETTINGS[sensorType];
+        const sensorState = hass.states[entityId].state;
         const iconElement = sensorElement.querySelector('ha-icon');
         const valueElement = sensorElement.querySelector('.sensor-value');
         const meterElement = sensorElement.querySelector('.meter span');
@@ -1191,7 +1259,7 @@ class FytaPlantCard extends HTMLElement {
         }
 
         if (valueElement) {
-          valueElement.textContent = state;
+          valueElement.textContent = sensorState;
         }
 
         if (uomElement) {
@@ -1210,9 +1278,9 @@ class FytaPlantCard extends HTMLElement {
           }
 
           // Calculate meter width and class based on status
-          const meterValues = this._convertStatusToMeterValues(statusState);
-          meterElement.className = meterValues.class;
-          meterElement.style.width = `${meterValues.percentage}%`;
+          const meterState = this._calculateMeterState(sensorSettings, sensorState, statusState);
+          meterElement.className = meterState.class;
+          meterElement.style.width = `${meterState.percentage}%`;
 
           // Update tooltip with current values
           const tooltipElement = sensorElement.querySelector('.tip');
@@ -1222,7 +1290,7 @@ class FytaPlantCard extends HTMLElement {
 
             // Tooltip content with full unit
             const sensorName = `${sensorType.charAt(0).toUpperCase()}${sensorType.slice(1)}`;
-            const tooltipContent = `${sensorName}: ${state} ${tooltipUnit}${statusState ? `<br>Status: ${statusState.replace(/_/g, " ")}` : ''}`;
+            const tooltipContent = `${sensorName}: ${sensorState} ${tooltipUnit}${statusState ? `<br>Status: ${statusState.replace(/_/g, " ")}` : ''}`;
 
             tooltipElement.innerHTML = tooltipContent;
           }
@@ -1268,15 +1336,14 @@ class FytaPlantCard extends HTMLElement {
 
         if (meterElement) {
           // Calculate meter width and class based on status
-          const meterValues = this._convertStatusToMeterValues(statusState);
-          meterElement.className = meterValues.class;
-          meterElement.style.width = `${meterValues.percentage}%`;
+          const meterState = this._calculateMeterState(SENSOR_SETTINGS.Nutrients, null, statusState);
+          meterElement.className = meterState.class;
+          meterElement.style.width = `${meterState.percentage}%`;
         }
 
         // Update tooltip with current values
         const tooltipElement = nutritionElement.querySelector('.tip');
         if (tooltipElement) {
-          // Update tooltip
           tooltipElement.innerHTML = this._buildNutritionTooltipContent(statusState, daysUntilFertilization, lastFertilizationDateString, nextFertilizationDateString);
         }
       }
