@@ -888,7 +888,6 @@ class FytaPlantCard extends HTMLElement {
 
     const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => state >= threshold) ||  { icon: 'mdi:battery-alert-variant-outline', color: 'var(--error-color, #F44336)', statusText: 'Unknown' };
 
-
     return `
       <div class="battery tooltip" @click="${this._click.bind(this, entityId)}">
         <div class="tip" style="text-align:center;">Battery: ${state}%<br>Status: ${statusText}</div>
