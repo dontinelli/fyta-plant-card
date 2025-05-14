@@ -190,7 +190,6 @@ const SCHEMA = [
         name: 'show_salinity',
         label: 'Salinity',
         selector: { boolean: {} },
-        required: false,
       },
       {
         name: 'salinity_order',
