@@ -66,6 +66,11 @@ const SCHEMA = [
     },
   },
   {
+    name: 'header_measurements',
+    type: 'constant',
+    label: 'Measurements',
+  },
+  {
     name: 'battery_threshold',
     label: 'Battery Threshold (%)',
     selector: {
@@ -77,48 +82,6 @@ const SCHEMA = [
       }
     },
     default: 10
-  },
-  {
-    type: 'grid',
-    schema: [
-      {
-        name: 'show_scientific_name',
-        label: 'Show Scientific Name',
-        type: 'boolean',
-        selector: { boolean: {} },
-      },
-      {
-        name: 'state_color_plant',
-        label: 'Show plant state color',
-        selector: { boolean: {} },
-      },
-    ],
-  },
-  {
-    name: 'header_measurements',
-    type: 'constant',
-    label: 'Measurements',
-  },
-  {
-    type: 'grid',
-    schema: [
-      {
-        name: 'show_light',
-        label: 'Light',
-        selector: { boolean: {} },
-      },
-      {
-        name: 'light_order',
-        label: 'Light Order',
-        selector: {
-          select: {
-            options: ORDER_OPTIONS,
-            mode: 'dropdown',
-          }
-        },
-        default: '2',
-      }
-    ]
   },
   {
     type: 'grid',
@@ -138,6 +101,27 @@ const SCHEMA = [
           }
         },
         default: '1',
+      }
+    ]
+  },
+  {
+    type: 'grid',
+    schema: [
+      {
+        name: 'show_light',
+        label: 'Light',
+        selector: { boolean: {} },
+      },
+      {
+        name: 'light_order',
+        label: 'Light Order',
+        selector: {
+          select: {
+            options: ORDER_OPTIONS,
+            mode: 'dropdown',
+          }
+        },
+        default: '2',
       }
     ]
   },
@@ -228,6 +212,22 @@ const SCHEMA = [
       },
     },
     default: 'full',
+  },
+  {
+    type: 'grid',
+    schema: [
+      {
+        name: 'show_scientific_name',
+        label: 'Show Scientific Name',
+        type: 'boolean',
+        selector: { boolean: {} },
+      },
+      {
+        name: 'state_color_plant',
+        label: 'Show plant state color',
+        selector: { boolean: {} },
+      },
+    ],
   },
   {
     type: 'grid',
