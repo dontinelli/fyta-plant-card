@@ -68,7 +68,7 @@ const SCHEMA = [
   {
     name: 'header_measurements',
     type: 'constant',
-    label: 'Measurements',
+    label: 'Sensor Measurements',
   },
   {
     name: 'battery_threshold',
