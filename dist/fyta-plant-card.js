@@ -733,7 +733,7 @@ class FytaPlantCard extends HTMLElement {
       }
 
       .header > #scientific-name {
-        color: var(--secondary-text-color, #727272);;
+        color: var(--secondary-text-color, #727272);
         text-wrap: nowrap;
         text-overflow: ellipsis;
         display: inline-block;
@@ -999,7 +999,7 @@ class FytaPlantCard extends HTMLElement {
       { threshold: -Infinity, icon: 'mdi:battery-alert-variant-outline', color: 'var(--state-sensor-battery-low-color, #f44336)', statusText: BATTERY_STATUS_TEXT.Unknown },
     ];
 
-    const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => state >= threshold) ||  { icon: 'mdi:battery-alert-variant-outline', color: 'var(--error-color, #F44336)', statusText: BATTERY_STATUS_TEXT.Unknown };
+    const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => state >= threshold) ||  { icon: 'mdi:battery-alert-variant-outline', color: 'var(--red-color, #f44336)', statusText: BATTERY_STATUS_TEXT.Unknown };
 
     return `
       <div class="battery tooltip" @click="${this._click.bind(this, entityId)}">
