@@ -142,14 +142,13 @@ const SCHEMA_PART_ONE = [
         mode: 'slider',
       },
     },
-
     default:DEFAULT_CONFIG.battery_threshold,
   },
 ];
 
-
 const SCHEMA_PART_TWO = [
   {
+    name: 'nutrition_info',
     type: 'constant',
     label: 'Nutrition and Salinity',
     value: 'The Nutrition Score combines multiple measurements (salinity, conductivity, growth data, and fertilization timing) into a single metric. Showing salinity separately is generally not needed as it is already included in this score.',
@@ -248,7 +247,7 @@ const SENSOR_SETTINGS = {
   },
   [SensorTypes.LIGHT]: {
     min: 0,
-    max: 1200,
+    max: 1250,
     icon: 'mdi:white-balance-sunny',
     name: 'Light',
   },
@@ -270,7 +269,7 @@ const SENSOR_SETTINGS = {
   },
   [SensorTypes.SALINITY]: {
     min: 0,
-    max: 3,
+    max: 4,
     icon: 'mdi:water-percent',
     name: 'Salinity',
   },
@@ -321,7 +320,7 @@ const parseConfig = (config) => {
         if (config[orderKey] !== undefined) {
           orderValue = String(config[orderKey]);
         }
-        return { type: sensorType, order: orderValue, enabled: config[`show_${sensorType}`] || false };
+        return { type: sensorType, order: orderValue, isEnabled: config[`show_${sensorType}`] || false };
       })
       .sort((a, b) => a.order - b.order)
       .map(({ type, isEnabled }) => { type, isEnabled})
@@ -506,7 +505,7 @@ class FytaPlantCard extends LitElement {
     }
   }
 
-  // Format date for displa: Remove time component
+  // Format date for display: Remove time component
   _formatDateForDisplay(dateString) {
     if (!dateString) return '';
 
@@ -518,7 +517,7 @@ class FytaPlantCard extends LitElement {
     return dateString;
   }
 
-    // Format unit for card display (only show part before "/" if it exists)
+  // Format unit for card display (only show part before "/" if it exists)
   _formatDisplayUnit(unit) {
     if (!unit) return '';
     const parts = unit.split('/');
@@ -1190,8 +1189,7 @@ class FytaPlantCard extends LitElement {
 
     // Add full-width item if needed
     if (this._fullWidthSensor) {
-      const isNutritionSensor = this._fullWidthSensor.key === SensorTypes.NUTRIENTS;
-      sensorHtml += isNutritionSensor ? renderNutrition() : renderSensor(this._fullWidthSensor);
+      sensorHtml += renderSensor(this._fullWidthSensor);
       this._fullWidthSensor = null; // Reset after use
     }
 
@@ -1437,18 +1435,24 @@ export class FytaPlantCardEditor extends LitElement {
     }
 
     switch (sensorType) {
-      case SensorTypes.LIGHT:
+      case SensorTypes.LIGHT: {
         return 'var(--yellow-color, #ffeb3b)';
-      case SensorTypes.MOISTURE:
+      }
+      case SensorTypes.MOISTURE: {
         return 'var(--blue-color, #2196f3)';
-      case SensorTypes.TEMPERATURE:
+      }
+      case SensorTypes.TEMPERATURE: {
         return 'var(--green-color, #4caf50)';
-      case SensorTypes.NUTRIENTS:
+      }
+      case SensorTypes.NUTRIENTS: {
         return 'var(--brown-color, #795548)';
-      case SensorTypes.SALINITY:
+      }
+      case SensorTypes.SALINITY: {
         return 'var(--purple-color, #9c27b0)';
-      default:
+      }
+      default: {
         return 'var(--disabled-color: #bdbdbd;)';
+      }
     }
   }
 
@@ -1488,9 +1492,7 @@ export class FytaPlantCardEditor extends LitElement {
                       icon="${SENSOR_SETTINGS[type].icon}"
                       style="color:${this._getSensorColor(type, isEnabled)}"></ha-svg-icon>
                   </div>
-                  <div class="item-label">${
-                    SENSOR_SETTINGS[type].name
-                  }</div>
+                  <div class="item-label">${SENSOR_SETTINGS[type].name}</div>
                 </div>
               `
               )}
