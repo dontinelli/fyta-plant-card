@@ -97,6 +97,7 @@ const DEFAULT_CONFIG = {
   show_scientific_name: true,
   state_color_battery: true,
   state_color_icon: true,
+  state_color_plant: PlantStateColorState.NAME,
   state_color_sensor: true,
   title: '',
 };

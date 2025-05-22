@@ -43,19 +43,20 @@ A custom card for displaying [FYTA plant](https://fyta.de/) information on your 
 
 The card includes a visual editor for easy configuration. For manual YAML configuration, use these options:
 
-| Name                 | Type    | Description                                         | Default     |
-|----------------------|---------|-----------------------------------------------------|-------------|
-| type                 | string  | `custom:fyta-plant-card`                            | (required)  |
-| device_id            | string  | Device ID of the Fyta plant                         | (required)  |
-| title                | string  | Card title                                          | Plant name  |
-| display_mode         | string  | `full` or `compact`                                 | `full`      |
-| battery_threshold    | number  | Battery level (%) at which icon appears (0-100)     | `30`        |
-| preferred_image      | string  | `image`, `name`, or `disabled`                      | `image`     |
-| show_scientific_name | boolean | Show light sensor                                   | `true`      |
-| state_color_battery  | boolean | Expose battery state in color of battery icon       | `true`      |
-| state_color_icon     | boolean | Expose sensor state in color of sensor icons        | `true`      |
-| state_color_sensor   | boolean | Expose sensor state in color of sensor bars         | `true`      |
-| sensor               | boolean | Array of sensor information                         | See sensors |
+| Name                 | Type    | Description                                         | Default      |
+|----------------------|---------|-----------------------------------------------------|--------------|
+| type                 | string  | `custom:fyta-plant-card`                            | (required)   |
+| device_id            | string  | Device ID of the Fyta plant                         | (required)   |
+| title                | string  | Card title                                          | Plant name   |
+| display_mode         | string  | `full` or `compact`                                 | `full`       |
+| battery_threshold    | number  | Battery level (%) at which icon appears (0-100)     | `30`         |
+| preferred_image      | string  | `user_image` or `default_image`                     | `user_image` |
+| show_scientific_name | boolean | Show light sensor                                   | `true`       |
+| state_color_battery  | boolean | Expose battery state in color of battery icon       | `true`       |
+| state_color_icon     | boolean | Expose sensor state in color of sensor icons        | `true`       |
+| state_color_plant    | string  | `image`, `name`, or `disabled`                      | `image`      |
+| state_color_sensor   | boolean | Expose sensor state in color of sensor bars         | `true`       |
+| sensor               | boolean | Array of sensor information                         | See sensors  |
 
 
 ### Sensors
@@ -77,10 +78,11 @@ device_id: 12345abc67890def123456
 title: My Monstera
 display_mode: compact
 battery_threshold: 30
-preferred_image: image
+preferred_image: user_image
 show_scientific_name: true
 state_color_battery: true
 state_color_icon: true
+state_color_plant: image
 state_color_sensor: true
 sensor:
   - type: light
