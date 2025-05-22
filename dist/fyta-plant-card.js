@@ -902,11 +902,11 @@ class FytaPlantCard extends LitElement {
     content.innerHTML = `
       <div class="header">
         <div id="plant-image">
-          <img src="${getPlantImageSrc()}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds.plant)}">
+          <img src="${getPlantImageSrc()}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">
         </div>
         <div id="plant-text">
-          <span id="name"${this.config.state_color_plant === PlantStateColorState.NAME ? ` style="color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds.plant)}">${this.config.title}</span>
-          ${this.config.show_scientific_name ? `<span id="scientific-name" @click="${this._click.bind(this, this._stateEntityIds.plant)}">${hass.states[this._otherEntityIds.scientificName]?.state || ''}</span>`: ''}
+          <span id="name"${this.config.state_color_plant === PlantStateColorState.NAME ? ` style="color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">${this.config.title}</span>
+          ${this.config.show_scientific_name ? `<span id="scientific-name" @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">${hass.states[this._otherEntityIds[SensorTypes.SCIENTIFIC_NAME]]?.state || ''}</span>`: ''}
         </div>
         ${this._renderBattery(hass)}
       </div>
@@ -923,7 +923,7 @@ class FytaPlantCard extends LitElement {
       // Find the closest clickable element
       const clickableElement = event.target.closest('[data-entity], img, #name, #scientific-name, .battery, .attribute');
       if (clickableElement) {
-        const entityId = clickableElement.dataset.entity || this._stateEntityIds.plant;
+        const entityId = clickableElement.dataset.entity || this._stateEntityIds[SensorTypes.PLANT_STATE];
         if (entityId) {
           this._click(entityId);
           event.stopPropagation();
@@ -935,11 +935,11 @@ class FytaPlantCard extends LitElement {
   }
 
   _renderBattery(hass) {
-    if (this._measurementEntityIds.battery === '') {
+    if (this._measurementEntityIds[SensorTypes.BATTERY] === '') {
       return '';
     }
 
-    const entityId = this._measurementEntityIds.battery;
+    const entityId = this._measurementEntityIds[SensorTypes.BATTERY];
     const state = parseInt(hass.states[entityId].state);
 
     // Check against the user-configured threshold
@@ -1043,6 +1043,7 @@ class FytaPlantCard extends LitElement {
     let tooltipContent = `Nutrition Status: ${statusState.replace(/_/g, ' ')}`;
 
     if (daysUntilFertilization !== null && !isNaN(daysUntilFertilization)) {
+      const daysText = Math.abs(daysUntilFertilization) === 1 ? 'day' : 'days';
       if (daysUntilFertilization >= 0) {
         tooltipContent += `<br>Fertilize in ${daysUntilFertilization} ${daysText}`;
       } else {
@@ -1133,13 +1134,13 @@ class FytaPlantCard extends LitElement {
 
     // Render nutrition status
     const renderNutrition = () => {
-      const statusEntityId = this._stateEntityIds.nutrients;
+      const statusEntityId = this._stateEntityIds[SensorTypes.NUTRIENT_STATE];
       const statusState = hass.states[statusEntityId]?.state;
       const color = this._getStateColor(SensorTypes.NUTRIENT_STATE, hass);
 
       // Get fertilizations date if available
-      const fertiliseLastEntityId = this._otherEntityIds.fertiliseLast;
-      const fertiliseNextEntityId = this._otherEntityIds.fertiliseNext;
+      const fertiliseLastEntityId = this._otherEntityIds[SensorTypes.FERTILIZED_LAST];
+      const fertiliseNextEntityId = this._otherEntityIds[SensorTypes.FERTILIZED_NEXT];
       let daysUntilFertilization = null;
       let lastFertilizationDateString = null;
       let nextFertilizationDateString = null;
@@ -1223,7 +1224,7 @@ class FytaPlantCard extends LitElement {
     // Update scientific name
     const scientificNameElement = this.shadowRoot.querySelector('#scientific-name');
     if (scientificNameElement) {
-      scientificNameElement.textContent = hass.states[this._otherEntityIds.scientificName]?.state || "";
+      scientificNameElement.textContent = hass.states[this._otherEntityIds[SensorTypes.SCIENTIFIC_NAME]]?.state || "";
     }
 
     // Update sensor values - include all sensor types
@@ -1286,16 +1287,16 @@ class FytaPlantCard extends LitElement {
     });
 
     // Also update nutrition
-    if (this._stateEntityIds.nutrients) {
+    if (this._stateEntityIds[SensorTypes.NUTRIENT_STATE]) {
       // Find the nutrition element
-      const nutritionElement = this.shadowRoot.querySelector(`.attribute[data-entity="${this._stateEntityIds.nutrients}"]`);
+      const nutritionElement = this.shadowRoot.querySelector(`.attribute[data-entity="${this._stateEntityIds[SensorTypes.NUTRIENT_STATE]}"]`);
 
       if (nutritionElement) {
-        const statusEntity = this._stateEntityIds.nutrients;
+        const statusEntity = this._stateEntityIds[SensorTypes.NUTRIENT_STATE];
         const statusState = hass.states[statusEntity].state;
 
         // Get next fertilization date if available
-        const { fertiliseLast: fertiliseLastEntityId, fertiliseNext: fertiliseNextEntityId } = this._otherEntityIds;
+        const { [SensorTypes.FERTILIZED_LAST]: fertiliseLastEntityId, [SensorTypes.FERTILIZED_NEXT]: fertiliseNextEntityId } = this._otherEntityIds;
         let daysUntilFertilization = null;
         let lastFertilizationDateString = null;
         let nextFertilizationDateString = null;
