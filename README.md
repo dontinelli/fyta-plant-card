@@ -101,7 +101,7 @@ sensor:
 
 For a visual guide on installation and configuration:
 
-[![Fyta Plant Card Installation Tutorial](https://img.youtube.com/vi/KS1u91yYSsE/0.jpg)](https://youtu.be/KS1u91yYSsE)
+[![FYTA Plant Card Installation Tutorial](https://img.youtube.com/vi/KS1u91yYSsE/0.jpg)](https://youtu.be/KS1u91yYSsE)
 
 ## Troubleshooting
 
