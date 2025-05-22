@@ -1,12 +1,12 @@
 # Home Assistant Fyta Plant Card
 
-A custom card for displaying [Fyta plant](https://fyta.de/) information on your Home Assistant dashboard.
+A custom card for displaying [FYTA plant](https://fyta.de/) information on your Home Assistant dashboard.
 
 ![Screenshot](assets/card-image.png)
 
 ## Prerequisites
 
-- [Fyta integration](https://www.home-assistant.io/integrations/fyta/) must be installed and configured in Home Assistant
+- [FYTA integration](https://www.home-assistant.io/integrations/fyta/) must be installed and configured in Home Assistant
 
 ## Features
 
@@ -26,7 +26,7 @@ A custom card for displaying [Fyta plant](https://fyta.de/) information on your 
    - Click the three dots in the top right corner
    - Select "Custom repositories"
    - Add `FYTA-GmbH/fyta-plant-card` with category "Lovelace"
-2. Install "Fyta Plant Card" from HACS
+2. Install "FYTA Plant Card" from HACS
 3. Refresh your browser
 
 ### Manual Installation
@@ -43,53 +43,56 @@ A custom card for displaying [Fyta plant](https://fyta.de/) information on your 
 
 The card includes a visual editor for easy configuration. For manual YAML configuration, use these options:
 
-| Name              | Type    | Description                                         | Default     |
-|-------------------|---------|-----------------------------------------------------|-------------|
-| type              | string  | `custom:fyta-plant-card`                            | (required)  |
-| device_id         | string  | Device ID of the Fyta plant                         | (required)  |
-| title             | string  | Card title                                          | Plant name  |
-| display_mode      | string  | `full` or `compact`                                 | `full`      |
-| battery_threshold | number  | Battery level (%) at which icon appears (0-100)     | `10`        |
-| show_light        | boolean | Show light sensor                                   | `true`      |
-| light_order       | string  | Display order for light (1-5)                       | `2`         |
-| show_moisture     | boolean | Show moisture sensor                                | `true`      |
-| moisture_order    | string  | Display order for moisture (1-5)                    | `1`         |
-| show_temperature  | boolean | Show temperature sensor                             | `true`      |
-| temperature_order | string  | Display order for temperature (1-5)                 | `3`         |
-| show_nutrition    | boolean | Show nutrition status                               | `true`      |
-| nutrition_order   | string  | Display order for nutrition (1-5)                   | `4`         |
-| show_salinity     | boolean | Show salinity sensor                                | `false`     |
-| salinity_order    | string  | Display order for salinity (1-5)                    | `5`         |
+| Name                 | Type    | Description                                         | Default     |
+|----------------------|---------|-----------------------------------------------------|-------------|
+| type                 | string  | `custom:fyta-plant-card`                            | (required)  |
+| device_id            | string  | Device ID of the Fyta plant                         | (required)  |
+| title                | string  | Card title                                          | Plant name  |
+| display_mode         | string  | `full` or `compact`                                 | `full`      |
+| battery_threshold    | number  | Battery level (%) at which icon appears (0-100)     | `30`        |
+| preferred_image      | string  | `image`, `name`, or `disabled`                      | `image`     |
+| show_scientific_name | boolean | Show light sensor                                   | `true`      |
+| state_color_battery  | boolean | Expose battery state in color of battery icon       | `true`      |
+| state_color_icon     | boolean | Expose sensor state in color of sensor icons        | `true`      |
+| state_color_sensor   | boolean | Expose sensor state in color of sensor bars         | `true`      |
+| sensor               | boolean | Array of sensor information                         | See sensors |
 
-### Display Order
 
-Sensors are arranged based on their order value (1-5). When there's an odd number of visible sensors, the one with the highest order number will appear full-width at the bottom.
+### Sensors
+Sensors is a YAML array that set the order of sensors and whether they are enabled. Each entry consists of a type (`light`, `moisture`, `temperature`, `salinity`, or `nutrients`) and its state `isEnabled`.
 
 ### Battery Display
 
 Set `battery_threshold` to control when the battery icon appears:
 - `0`: Never show the battery icon
-- `10` (default): Show only when battery is 10% or below
+- `30` (default): Show only when battery is 30% or below
 - `100`: Always show the battery icon
 - Any value in between: Show when battery level is at or below this percentage
 
 ## Example Configuration
 
 ```yaml
-type: 'custom:fyta-plant-card'
+type: custom:fyta-plant-card
 device_id: 12345abc67890def123456
 title: My Monstera
 display_mode: compact
-battery_threshold: 20
-show_light: true
-light_order: '2'
-show_moisture: true
-moisture_order: '1'
-show_temperature: true
-temperature_order: '3'
-show_nutrition: true
-nutrition_order: '4'
-show_salinity: false
+battery_threshold: 30
+preferred_image: image
+show_scientific_name: true
+state_color_battery: true
+state_color_icon: true
+state_color_sensor: true
+sensor:
+  - type: light
+    isEnabled: true
+  - type: moisture
+    isEnabled: true
+  - type: temperature
+    isEnabled: true
+  - type: nutrients
+    isEnabled: true
+  - type: salinity
+    isEnabled: false
 ```
 
 ## Video Tutorial
@@ -100,10 +103,10 @@ For a visual guide on installation and configuration:
 
 ## Troubleshooting
 
-- Make sure your Fyta integration is properly set up with connected plants
+- Make sure your FYTA integration is properly set up with connected plants
 - Verify your plant's device ID is correct
 - Check browser console for any error messages
-- If card doesn't appear after installation, clear your browser cache
+- If card does not appear after installation, clear your browser cache
 
 ## License
 

@@ -97,9 +97,7 @@ const DEFAULT_CONFIG = {
   show_scientific_name: true,
   state_color_battery: true,
   state_color_icon: true,
-  state_color_plant: 'image',
   state_color_sensor: true,
-  state_color: true,
   title: '',
 };
 
