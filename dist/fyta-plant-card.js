@@ -246,8 +246,6 @@ const SENSOR_SETTINGS = {
     name: 'Battery',
   },
   [SensorTypes.LIGHT]: {
-    min: 0,
-    max: 1250,
     icon: 'mdi:white-balance-sunny',
     name: 'Light',
   },
@@ -268,8 +266,6 @@ const SENSOR_SETTINGS = {
     name: 'Ambient Temperature',
   },
   [SensorTypes.SALINITY]: {
-    min: 0,
-    max: 4,
     icon: 'mdi:water-percent',
     name: 'Salinity',
   },
