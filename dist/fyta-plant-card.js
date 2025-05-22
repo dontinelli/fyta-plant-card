@@ -59,11 +59,6 @@ const PlantStateColorState = {
   NAME: 'name',
 };
 
-const PreferredPlantImage = {
-  USER_IMAGE: 'user_image',
-  DEFAULT_IMAGE: 'default_image',
-};
-
 const SensorTypes = {
   BATTERY: 'battery',
   FERTILIZED_LAST: 'fertilizedLast',
@@ -93,7 +88,6 @@ const DEFAULT_CONFIG = {
     { type: SensorTypes.NUTRIENTS, isEnabled: true },
     { type: SensorTypes.SALINITY, isEnabled: false },
   ],
-  preferred_image: PreferredPlantImage.USER_IMAGE,
   show_scientific_name: true,
   state_color_battery: true,
   state_color_icon: true,
@@ -185,20 +179,6 @@ const SCHEMA_PART_TWO = [
       },
     },
     default: DEFAULT_CONFIG.state_color_plant,
-  },
-  {
-    name: 'preferred_image',
-    label: 'Preferred plant image',
-    selector: {
-      select: {
-        options: [
-          { label: 'User Image', value: PreferredPlantImage.USER_IMAGE },
-          { label: 'Default Image', value: PreferredPlantImage.DEFAULT_IMAGE },
-        ],
-        mode: 'box',
-      },
-    },
-    default: DEFAULT_CONFIG.preferred_image,
   },
   {
     type: 'grid',
@@ -347,7 +327,6 @@ class FytaPlantCard extends LitElement {
     this.attachShadow({ mode: 'open' });
     this._initialized = false;
     this._plantImage = '';
-    this._plantImageUser = '';
     this._measurementEntityIds = {
       [SensorTypes.BATTERY]: '',
       [SensorTypes.LIGHT]: '',
@@ -524,11 +503,7 @@ class FytaPlantCard extends LitElement {
     if (!stateEntity) return;
 
     if (id.startsWith('image.')) {
-      if (id.endsWith('plant_image_user')) {
-        this._plantImageUser = hass.states[id].attributes.entity_picture;
-      } else {
-        this._plantImage = hass.states[id].attributes.entity_picture;
-      }
+      this._plantImage = hass.states[id].attributes.entity_picture;
       return;
     }
 
@@ -887,17 +862,10 @@ class FytaPlantCard extends LitElement {
     content.id = 'container';
     content.className = this.config.display_mode === DisplayMode.COMPACT ? 'compact-mode' : '';
 
-    const getPlantImageSrc = () => {
-      if (this.config.preferred_image === PreferredPlantImage.USER_IMAGE && this._plantImageUser) {
-        return this._plantImageUser;
-      }
-      return this._plantImage;
-    };
-
     content.innerHTML = `
       <div class="header">
         <div id="plant-image">
-          <img src="${getPlantImageSrc()}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">
+          <img src="${this._plantImage}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">
         </div>
         <div id="plant-text">
           <span id="name"${this.config.state_color_plant === PlantStateColorState.NAME ? ` style="color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">${this.config.title}</span>

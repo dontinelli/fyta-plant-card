@@ -50,7 +50,6 @@ The card includes a visual editor for easy configuration. For manual YAML config
 | title                | string  | Card title                                          | Plant name   |
 | display_mode         | string  | `full` or `compact`                                 | `full`       |
 | battery_threshold    | number  | Battery level (%) at which icon appears (0-100)     | `30`         |
-| preferred_image      | string  | `user_image` or `default_image`                     | `user_image` |
 | show_scientific_name | boolean | Show light sensor                                   | `true`       |
 | state_color_battery  | boolean | Expose battery state in color of battery icon       | `true`       |
 | state_color_icon     | boolean | Expose sensor state in color of sensor icons        | `true`       |
@@ -78,7 +77,6 @@ device_id: 12345abc67890def123456
 title: My Monstera
 display_mode: compact
 battery_threshold: 30
-preferred_image: user_image
 show_scientific_name: true
 state_color_battery: true
 state_color_icon: true
