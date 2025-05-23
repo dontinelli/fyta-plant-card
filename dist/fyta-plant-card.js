@@ -279,12 +279,16 @@ const parseConfig = (config) => {
 
   // Upgrade legacy config from sensor order values
   if (containsLegacyKeys) {
+    const LegacySensorType = {
+      NUTRITION: 'nutrition'
+    };
+
     const leygacySensorKeyTypes = [
       SensorTypes.LIGHT,
       SensorTypes.MOISTURE,
       SensorTypes.TEMPERATURE,
       SensorTypes.SALINITY,
-      SensorTypes.NUTRIENTS,
+      LegacySensorType.NUTRITION,
     ];
 
     newConfig.sensors = leygacySensorKeyTypes
@@ -295,10 +299,13 @@ const parseConfig = (config) => {
         if (config[orderKey] !== undefined) {
           orderValue = String(config[orderKey]);
         }
-        return { type: sensorType, order: orderValue, isEnabled: config[`show_${sensorType}`] || false };
+        const type = sensorType === LegacySensorType.NUTRITION ? SensorTypes.NUTRIENTS : sensorType;
+        return { type, order: orderValue, isEnabled: config[`show_${sensorType}`] || false };
       })
       .sort((a, b) => a.order - b.order)
-      .map(({ type, isEnabled }) => { type, isEnabled})
+      .map(({ type, isEnabled }) => {
+        return { type, isEnabled };
+      });
   }
 
   if (newConfig.sensors.length === 0) {
@@ -388,7 +395,7 @@ class FytaPlantCard extends LitElement {
     const baseHeight = this.config?.display_mode === DisplayMode.FULL ? 130 : 90; // Base size
 
     // Count enabled sensors and add 0.5 to base size for each sensor beyond the first 2
-    const sensorCount = this.config.sensors?.reduce((accumulator, item) => accumulator + (item.isEnabled ? 1 : 0), 0);
+    const sensorCount = this.config.sensors?.reduce((accumulator, item) => accumulator + (item?.isEnabled ? 1 : 0), 0);
     const attributesHeight = Math.ceil(sensorCount / 2) * 30;
 
     const cardHeight = baseHeight + attributesHeight;
