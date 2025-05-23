@@ -1468,7 +1468,7 @@ export class FytaPlantCardEditor extends LitElement {
             .schema=${SCHEMA_PART_TWO}
             .computeLabel=${this._computeLabel}
             @value-changed=${this._valueChanged}
-          ></ha-form-constant>
+          ></ha-form>
         </div>
       </div>
     `;
