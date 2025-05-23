@@ -1027,7 +1027,7 @@ class FytaPlantCard extends LitElement {
   _renderSensors(hass) {
     // Filter enabled sensors based on entity ID availability
     const visibleSensors = this.config.sensors?.filter((sensorSettings) => {
-      return sensorSettings.isEnabled && this._measurementEntityIds[sensorSettings.type] !== '';
+      return sensorSettings && sensorSettings.isEnabled && this._measurementEntityIds[sensorSettings.type] !== '';
     });
 
     if (!visibleSensors || visibleSensors.length === 0) {
