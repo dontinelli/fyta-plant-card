@@ -30,7 +30,7 @@ const MeasurementStatusStates = {
   TOO_HIGH: 'too_high',
 };
 
-const MeasureMentStatusColors = {
+const MeasurementStatusColors = {
   [MeasurementStatusStates.NO_DATA]: 'var(--disabled-text-color, #bdbdbd)',
   [MeasurementStatusStates.TOO_LOW]: 'var(--red-color, #f44336)',
   [MeasurementStatusStates.LOW]: 'var(--orange-color, #ff9800)',
@@ -465,8 +465,8 @@ class FytaPlantCard extends LitElement {
       case SensorTypes.SALINITY_STATE:
       case SensorTypes.TEMPERATURE_STATE: {
         const entityId = this._stateEntityIds[stateType];
-        const state = hass.states[entityId]?.state || MeasureMentStatusColors.NoData;
-        return MeasureMentStatusColors[state];
+        const state = hass.states[entityId]?.state || MeasurementStatusColors.NoData;
+        return MeasurementStatusColors[state];
       }
       case SensorTypes.PLANT_STATE: {
         const entityId = this._stateEntityIds[stateType];
