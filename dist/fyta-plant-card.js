@@ -68,7 +68,7 @@ const SensorTypes = {
   MOISTURE: 'moisture',
   MOISTURE_STATE: 'moisture',
   NUTRIENTS: 'nutrients',
-  NUTRIENT_STATE: 'nutrients',
+  NUTRIENTS_STATE: 'nutrients',
   PLANT_STATE: 'plant',
   SALINITY: 'salinity',
   SALINITY_STATE: 'salinity',
@@ -345,7 +345,7 @@ class FytaPlantCard extends LitElement {
     this._stateEntityIds = {
       [SensorTypes.LIGHT_STATE]: '',
       [SensorTypes.MOISTURE_STATE]: '',
-      [SensorTypes.NUTRIENT_STATE]: '',
+      [SensorTypes.NUTRIENTS_STATE]: '',
       [SensorTypes.PLANT_STATE]: '',
       [SensorTypes.SALINITY_STATE]: '',
       [SensorTypes.TEMPERATURE_STATE]: '',
@@ -468,7 +468,7 @@ class FytaPlantCard extends LitElement {
     switch (stateType) {
       case SensorTypes.LIGHT_STATE:
       case SensorTypes.MOISTURE_STATE:
-      case SensorTypes.NUTRIENT_STATE:
+      case SensorTypes.NUTRIENTS_STATE:
       case SensorTypes.SALINITY_STATE:
       case SensorTypes.TEMPERATURE_STATE: {
         const entityId = this._stateEntityIds[stateType];
@@ -1104,9 +1104,9 @@ class FytaPlantCard extends LitElement {
 
     // Render nutrition status
     const renderNutrition = () => {
-      const statusEntityId = this._stateEntityIds[SensorTypes.NUTRIENT_STATE];
+      const statusEntityId = this._stateEntityIds[SensorTypes.NUTRIENTS_STATE];
       const statusState = hass.states[statusEntityId]?.state;
-      const color = this._getStateColor(SensorTypes.NUTRIENT_STATE, hass);
+      const color = this._getStateColor(SensorTypes.NUTRIENTS_STATE, hass);
 
       // Get fertilizations date if available
       const fertiliseLastEntityId = this._otherEntityIds[SensorTypes.FERTILIZED_LAST];
@@ -1257,12 +1257,12 @@ class FytaPlantCard extends LitElement {
     });
 
     // Also update nutrition
-    if (this._stateEntityIds[SensorTypes.NUTRIENT_STATE]) {
+    if (this._stateEntityIds[SensorTypes.NUTRIENTS_STATE]) {
       // Find the nutrition element
-      const nutritionElement = this.shadowRoot.querySelector(`.attribute[data-entity="${this._stateEntityIds[SensorTypes.NUTRIENT_STATE]}"]`);
+      const nutritionElement = this.shadowRoot.querySelector(`.attribute[data-entity="${this._stateEntityIds[SensorTypes.NUTRIENTS_STATE]}"]`);
 
       if (nutritionElement) {
-        const statusEntity = this._stateEntityIds[SensorTypes.NUTRIENT_STATE];
+        const statusEntity = this._stateEntityIds[SensorTypes.NUTRIENTS_STATE];
         const statusState = hass.states[statusEntity].state;
 
         // Get next fertilization date if available
@@ -1283,7 +1283,7 @@ class FytaPlantCard extends LitElement {
         const iconElement = nutritionElement.querySelector('ha-icon');
         if (iconElement) {
           if (this.config.state_color_icon) {
-            iconElement.style.color = this._getStateColor(SensorTypes.NUTRIENT_STATE, hass);
+            iconElement.style.color = this._getStateColor(SensorTypes.NUTRIENTS_STATE, hass);
           }
         }
 
