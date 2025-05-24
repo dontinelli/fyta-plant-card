@@ -209,7 +209,7 @@ const SCHEMA_PART_TWO = [
       },
       {
         name: 'state_color_icon',
-        label: 'Show state color icons',
+        label: 'Show colored state icons ',
         selector: { boolean: {} },
         default: DEFAULT_CONFIG.state_color_icon,
       },
