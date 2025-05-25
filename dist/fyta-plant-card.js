@@ -969,7 +969,7 @@ class FytaPlantCard extends LitElement {
     let percentage = null;
     if (sensorState !== null && sensorSettings.min !== null && sensorSettings.max != null) {
       const calculatedPercentage = (sensorState - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
-      percentage = Math.max(0, Math.min(100100, calculatedPercentage));
+      percentage = Math.max(0, Math.min(100, calculatedPercentage));
     }
 
     switch (statusState) {
