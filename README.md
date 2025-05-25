@@ -25,7 +25,7 @@ A custom card for displaying [FYTA plant](https://fyta.de/) information on your 
    - Go to HACS → Frontend
    - Click the three dots in the top right corner
    - Select "Custom repositories"
-   - Add `https://github.com/dontinelli/fyta-plant-card` with category "Lovelace"
+   - Add `https://github.com/dontinelli/fyta-plant-card` with category "Dashboard"
 2. Install "FYTA Plant Card" from HACS
 3. Refresh your browser
 
@@ -41,7 +41,11 @@ A custom card for displaying [FYTA plant](https://fyta.de/) information on your 
 
 ## Configuration
 
-The card includes a visual editor for easy configuration. For manual YAML configuration, use these options:
+The card includes a visual editor for easy configuration:
+
+![Configuration Options](assets/card-settings.gif)
+
+For manual YAML configuration, use these options:
 
 | Name                 | Type    | Description                                         | Default      |
 |----------------------|---------|-----------------------------------------------------|--------------|
