@@ -375,7 +375,7 @@ class FytaPlantCard extends LitElement {
     this._otherEntityIds = {
       [SensorTypes.FERTILIZED_LAST]: '',
       [SensorTypes.FERTILIZED_NEXT]: '',
-      [SensorTypes.PLANT_IMAGE]: '',
+      [SensorTypes.PLANT_IMAGE_DEFAULT]: '',
       [SensorTypes.PLANT_IMAGE_USER]: '',
       [SensorTypes.SCIENTIFIC_NAME]: '',
     };
