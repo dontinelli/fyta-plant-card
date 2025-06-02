@@ -150,7 +150,7 @@ const SCHEMA_PART_ONE = [
         mode: 'slider',
       },
     },
-    default:DEFAULT_CONFIG.battery_threshold,
+    default: DEFAULT_CONFIG.battery_threshold,
   },
 ];
 
