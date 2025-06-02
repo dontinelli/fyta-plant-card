@@ -579,9 +579,9 @@ class FytaPlantCard extends LitElement {
     }
   }
 
-  _handleEntities(hass, device_id) {
+  _handleEntities(hass, deviceId) {
     Object.keys(hass.entities)
-      .filter((id) => hass.entities[id].device_id === device_id)
+      .filter((id) => hass.entities[id].device_id === deviceId)
       .forEach((id) => this._handleEntity(id, hass), this);
   }
 
