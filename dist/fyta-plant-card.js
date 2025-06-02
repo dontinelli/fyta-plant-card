@@ -84,6 +84,10 @@ const SensorTypes = {
   TEMPERATURE_STATE: 'temperature',
 };
 
+const TranslationKeys = {
+  PLANT_IMAGE_USER: 'plant_image_user',
+};
+
 const DEFAULT_CONFIG = {
   battery_threshold: 30,
   device_id: '',
@@ -533,13 +537,13 @@ class FytaPlantCard extends LitElement {
       const userImageEntityId = this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER];
 
       if (userImageEntityId && hass.states[userImageEntityId]?.attributes.entity_picture) {
-        return hass.states[userImageEntityId]?.attributes.entity_picture;
+        return hass.states[userImageEntityId]?.attributes.entity_picture || '';
       }
     }
 
     const defaultImageEntityId = this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT];
     if (defaultImageEntityId && hass.states[defaultImageEntityId]?.attributes.entity_picture) {
-      return hass.states[defaultImageEntityId]?.attributes.entity_picture;
+      return hass.states[defaultImageEntityId]?.attributes.entity_picture || '';
     }
 
     return '';
@@ -550,11 +554,14 @@ class FytaPlantCard extends LitElement {
     if (!stateEntity) return;
 
     if (id.startsWith('image.')) {
-      if (id.endsWith('plant_image_user')) {
+      const entity = hass.entities[id];
+      if (!entity) return;
+
+      if (entity.translation_key === TranslationKeys.PLANT_IMAGE_USER) {
         this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER] = stateEntity.entity_id;
-      } else {
-        this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT] = stateEntity.entity_id;
+        return;
       }
+      this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT] = stateEntity.entity_id;
       return;
     }
 
