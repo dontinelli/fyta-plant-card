@@ -472,7 +472,7 @@ class FytaPlantCard extends LitElement {
       case SensorTypes.SALINITY_STATE:
       case SensorTypes.TEMPERATURE_STATE: {
         const entityId = this._stateEntityIds[stateType];
-        const state = hass.states[entityId]?.state || MeasurementStatusColors.NoData;
+        const state = hass.states[entityId]?.state || MeasurementStatusStates.NO_DATA;
         return MeasurementStatusColors[state];
       }
       case SensorTypes.PLANT_STATE: {
