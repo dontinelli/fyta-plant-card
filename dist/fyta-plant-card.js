@@ -569,7 +569,7 @@ class FytaPlantCard extends LitElement {
     if (!hassEntity) return;
 
     if (id.startsWith('image.')) {
-      if (entity.translation_key === TranslationKeys.PLANT_IMAGE_USER) {
+      if (hassEntity.translation_key === TranslationKeys.PLANT_IMAGE_USER) {
         this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER] = hassState.entity_id;
         return;
       }
