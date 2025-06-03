@@ -8,10 +8,6 @@ const CUSTOM_CARD_NAME = 'fyta-plant-card';
 
 const DeviceClass = {
   BATTERY: 'battery',
-  CONDUCTIVITY: 'conductivity',
-  DATE: 'date',
-  ENUM: 'enum',
-  LIGHT: 'light',
   MOISTURE: 'moisture',
   TEMPERATURE: 'temperature',
 };
@@ -19,6 +15,11 @@ const DeviceClass = {
 const DisplayMode = {
   FULL: 'full',
   COMPACT: 'compact',
+};
+
+const EntityType = {
+  IMAGE: 'image',
+  SENSOR: 'sensor',
 };
 
 const MeasurementStatusStates = {
@@ -66,8 +67,8 @@ const PreferredPlantImage = {
 
 const SensorTypes = {
   BATTERY: 'battery',
-  FERTILIZED_LAST: 'fertilizedLast',
-  FERTILIZED_NEXT: 'fertilizedNext',
+  FERTILIZATION_LAST: 'fertilizationLast',
+  FERTILIZATION_NEXT: 'fertilizationNext',
   LIGHT: 'light',
   LIGHT_STATE: 'light',
   MOISTURE: 'moisture',
@@ -85,7 +86,18 @@ const SensorTypes = {
 };
 
 const TranslationKeys = {
+  FERTILIZATION_LAST: 'last_fertilised',
+  FERTILIZATION_NEXT: 'next_fertilisation',
+  LIGHT: 'light',
+  LIGHT_STATUS: 'light_status',
+  MOISTURE_STATUS: 'moisture_status',
+  NUTRIENTS_STATUS: 'nutrients_status',
   PLANT_IMAGE_USER: 'plant_image_user',
+  PLANT_STATUS: 'plant_status',
+  SALINITY: 'salinity',
+  SALINITY_STATUS: 'salinity_status',
+  SCIENTIFIC_NAME: 'scientific_name',
+  TEMPERATURE_STATUS: 'temperature_status',
 };
 
 const DEFAULT_CONFIG = {
@@ -147,7 +159,7 @@ const SCHEMA_PART_ONE = [
         mode: 'slider',
       },
     },
-    default:DEFAULT_CONFIG.battery_threshold,
+    default: DEFAULT_CONFIG.battery_threshold,
   },
 ];
 
@@ -377,8 +389,8 @@ class FytaPlantCard extends LitElement {
     };
 
     this._otherEntityIds = {
-      [SensorTypes.FERTILIZED_LAST]: '',
-      [SensorTypes.FERTILIZED_NEXT]: '',
+      [SensorTypes.FERTILIZATION_LAST]: '',
+      [SensorTypes.FERTILIZATION_NEXT]: '',
       [SensorTypes.PLANT_IMAGE_DEFAULT]: '',
       [SensorTypes.PLANT_IMAGE_USER]: '',
       [SensorTypes.SCIENTIFIC_NAME]: '',
@@ -499,7 +511,7 @@ class FytaPlantCard extends LitElement {
       case SensorTypes.SALINITY_STATE:
       case SensorTypes.TEMPERATURE_STATE: {
         const entityId = this._stateEntityIds[stateType];
-        const state = hass.states[entityId]?.state || MeasurementStatusColors.NoData;
+        const state = hass.states[entityId]?.state || MeasurementStatusStates.NO_DATA;
         return MeasurementStatusColors[state];
       }
       case SensorTypes.PLANT_STATE: {
@@ -550,68 +562,65 @@ class FytaPlantCard extends LitElement {
   };
 
   _handleEntity(id, hass) {
-    const stateEntity = hass.states[id];
-    if (!stateEntity) return;
+    const hassState = hass.states[id];
+    if (!hassState) return;
+
+    const hassEntity = hass.entities[id];
+    if (!hassEntity) return;
 
     if (id.startsWith('image.')) {
-      const entity = hass.entities[id];
-      if (!entity) return;
-
       if (entity.translation_key === TranslationKeys.PLANT_IMAGE_USER) {
-        this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER] = stateEntity.entity_id;
+        this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER] = hassState.entity_id;
         return;
       }
-      this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT] = stateEntity.entity_id;
+      this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT] = hassState.entity_id;
       return;
     }
 
-    if (id.endsWith('_scientific_name')) {
-      this._otherEntityIds[SensorTypes.SCIENTIFIC_NAME] = stateEntity.entity_id;
+    if (id.startsWith(EntityType.IMAGE)) {
+      this._plantImage = hass.states[id].attributes.entity_picture;
       return;
     }
 
-    if (id.startsWith('sensor.')) {
-      if (!stateEntity.attributes.device_class && stateEntity.attributes.unit_of_measurement == 'μmol/s⋅m²') {
-        this._measurementEntityIds[SensorTypes.LIGHT] = stateEntity.entity_id;
-        return;
-      }
-
-      switch (stateEntity.attributes.device_class) {
-        case DeviceClass.BATTERY:
-        case DeviceClass.MOISTURE:
-        case DeviceClass.TEMPERATURE: {
-          this._measurementEntityIds[stateEntity.attributes.device_class] = stateEntity.entity_id;
+    if (id.startsWith(EntityType.SENSOR)) {
+      switch (hassEntity.translation_key) {
+        case TranslationKeys.LIGHT_STATUS:
+        case TranslationKeys.MOISTURE_STATUS:
+        case TranslationKeys.NUTRIENTS_STATUS:
+        case TranslationKeys.PLANT_STATUS:
+        case TranslationKeys.SALINITY_STATUS:
+        case TranslationKeys.TEMPERATURE_STATUS: {
+          this._stateEntityIds[hassEntity.translation_key.replace('_status', '')] = hassState.entity_id;
           return;
         }
-        case DeviceClass.CONDUCTIVITY: {
-          this._measurementEntityIds[SensorTypes.SALINITY] = stateEntity.entity_id;
+
+        case TranslationKeys.FERTILIZATION_LAST: {
+          this._otherEntityIds[SensorTypes.FERTILIZATION_LAST] = hassState.entity_id;
           return;
         }
-        case DeviceClass.DATE: {
-          // Capture the last fertilization date entity - support both naming patterns
-          if (id.includes('fertilize_last') || id.includes('last_fertilized')) {
-            this._otherEntityIds[SensorTypes.FERTILIZED_LAST] = stateEntity.entity_id;
-            return;
-          }
-          // Capture the next fertilization date entity - support both naming patterns
-          if (id.includes('fertilize_next') || id.includes('next_fertilization')) {
-            this._otherEntityIds[SensorTypes.FERTILIZED_NEXT] = stateEntity.entity_id;
-            return;
-          }
-          break;
+        case TranslationKeys.FERTILIZATION_NEXT: {
+          this._otherEntityIds[SensorTypes.FERTILIZATION_NEXT] = hassState.entity_id;
+          return;
         }
-        case DeviceClass.ENUM: {
-          const entity = hass.entities[id];
-          if (!entity) return;
+        case TranslationKeys.LIGHT: {
+          this._measurementEntityIds[SensorTypes.LIGHT] = hassState.entity_id;
+          return;
+        }
+        case TranslationKeys.SALINITY: {
+          this._measurementEntityIds[SensorTypes.SALINITY] = hassState.entity_id;
+          return;
+        }
+        case TranslationKeys.SCIENTIFIC_NAME: {
+          this._otherEntityIds[SensorTypes.SCIENTIFIC_NAME] = hassState.entity_id;
+          return;
+        }
 
-          switch (entity.translation_key) {
-            case 'plant_status':
-            case 'light_status':
-            case 'moisture_status':
-            case 'salinity_status':
-            case 'temperature_status':
-            case 'nutrients_status': {
-              this._stateEntityIds[entity.translation_key.replace('_status', '')] = stateEntity.entity_id;
+        default: {
+          switch (hassState.attributes.device_class) {
+            case DeviceClass.BATTERY:
+            case DeviceClass.MOISTURE:
+            case DeviceClass.TEMPERATURE: {
+              this._measurementEntityIds[hassState.attributes.device_class] = hassState.entity_id;
               return;
             }
           }
@@ -620,9 +629,9 @@ class FytaPlantCard extends LitElement {
     }
   }
 
-  _handleEntities(hass, device_id) {
+  _handleEntities(hass, deviceId) {
     Object.keys(hass.entities)
-      .filter((id) => hass.entities[id].device_id === device_id)
+      .filter((id) => hass.entities[id].device_id === deviceId)
       .forEach((id) => this._handleEntity(id, hass), this);
   }
 
@@ -1160,8 +1169,8 @@ class FytaPlantCard extends LitElement {
       const color = this._getStateColor(SensorTypes.NUTRIENTS_STATE, hass);
 
       // Get fertilizations date if available
-      const fertiliseLastEntityId = this._otherEntityIds[SensorTypes.FERTILIZED_LAST];
-      const fertiliseNextEntityId = this._otherEntityIds[SensorTypes.FERTILIZED_NEXT];
+      const fertiliseLastEntityId = this._otherEntityIds[SensorTypes.FERTILIZATION_LAST];
+      const fertiliseNextEntityId = this._otherEntityIds[SensorTypes.FERTILIZATION_NEXT];
       let daysUntilFertilization = null;
       let lastFertilizationDateString = null;
       let nextFertilizationDateString = null;
@@ -1322,7 +1331,7 @@ class FytaPlantCard extends LitElement {
         const statusState = hass.states[statusEntity].state;
 
         // Get next fertilization date if available
-        const { [SensorTypes.FERTILIZED_LAST]: fertiliseLastEntityId, [SensorTypes.FERTILIZED_NEXT]: fertiliseNextEntityId } = this._otherEntityIds;
+        const { [SensorTypes.FERTILIZATION_LAST]: fertiliseLastEntityId, [SensorTypes.FERTILIZATION_NEXT]: fertiliseNextEntityId } = this._otherEntityIds;
         let daysUntilFertilization = null;
         let lastFertilizationDateString = null;
         let nextFertilizationDateString = null;

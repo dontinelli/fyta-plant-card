@@ -1,4 +1,4 @@
-# Home Assistant Fyta Plant Card
+# Home Assistant FYTA Plant Card
 
 A custom card for displaying [FYTA plant](https://fyta.de/) information on your Home Assistant dashboard.
 
