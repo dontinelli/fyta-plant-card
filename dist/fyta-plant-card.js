@@ -60,6 +60,11 @@ const PlantStateColorState = {
   NAME: 'name',
 };
 
+const PreferredPlantImage = {
+  USER: 'user',
+  DEFAULT: 'default',
+};
+
 const SensorTypes = {
   BATTERY: 'battery',
   FERTILIZATION_LAST: 'fertilizationLast',
@@ -70,6 +75,8 @@ const SensorTypes = {
   MOISTURE_STATE: 'moisture',
   NUTRIENTS: 'nutrients',
   NUTRIENTS_STATE: 'nutrients',
+  PLANT_IMAGE_DEFAULT: 'plant_image_default',
+  PLANT_IMAGE_USER: 'plant_image_user',
   PLANT_STATE: 'plant',
   SALINITY: 'salinity',
   SALINITY_STATE: 'salinity',
@@ -85,6 +92,7 @@ const TranslationKeys = {
   LIGHT_STATUS: 'light_status',
   MOISTURE_STATUS: 'moisture_status',
   NUTRIENTS_STATUS: 'nutrients_status',
+  PLANT_IMAGE_USER: 'plant_image_user',
   PLANT_STATUS: 'plant_status',
   SALINITY: 'salinity',
   SALINITY_STATUS: 'salinity_status',
@@ -103,6 +111,7 @@ const DEFAULT_CONFIG = {
     { type: SensorTypes.NUTRIENTS, isEnabled: true },
     { type: SensorTypes.SALINITY, isEnabled: false },
   ],
+  preferred_image: PreferredPlantImage.USER,
   show_scientific_name: true,
   state_color_battery: true,
   state_color_icon: true,
@@ -194,6 +203,20 @@ const SCHEMA_PART_TWO = [
       },
     },
     default: DEFAULT_CONFIG.state_color_plant,
+  },
+  {
+    name: 'preferred_image',
+    label: 'Preferred plant image',
+    selector: {
+      select: {
+        options: [
+          { label: 'User Image', value: PreferredPlantImage.USER },
+          { label: 'Default Image', value: PreferredPlantImage.DEFAULT },
+        ],
+        mode: 'box',
+      },
+    },
+    default: DEFAULT_CONFIG.preferred_image,
   },
   {
     type: 'grid',
@@ -348,7 +371,6 @@ class FytaPlantCard extends LitElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._initialized = false;
-    this._plantImage = '';
     this._measurementEntityIds = {
       [SensorTypes.BATTERY]: '',
       [SensorTypes.LIGHT]: '',
@@ -369,6 +391,8 @@ class FytaPlantCard extends LitElement {
     this._otherEntityIds = {
       [SensorTypes.FERTILIZATION_LAST]: '',
       [SensorTypes.FERTILIZATION_NEXT]: '',
+      [SensorTypes.PLANT_IMAGE_DEFAULT]: '',
+      [SensorTypes.PLANT_IMAGE_USER]: '',
       [SensorTypes.SCIENTIFIC_NAME]: '',
     };
   }
@@ -520,12 +544,38 @@ class FytaPlantCard extends LitElement {
     return parts[0];
   }
 
+  _getPlantImageSrc(hass) {
+    if (this.config.preferred_image === PreferredPlantImage.USER) {
+      const userImageEntityId = this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER];
+
+      if (userImageEntityId && hass.states[userImageEntityId]?.attributes.entity_picture) {
+        return hass.states[userImageEntityId]?.attributes.entity_picture || '';
+      }
+    }
+
+    const defaultImageEntityId = this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT];
+    if (defaultImageEntityId && hass.states[defaultImageEntityId]?.attributes.entity_picture) {
+      return hass.states[defaultImageEntityId]?.attributes.entity_picture || '';
+    }
+
+    return '';
+  };
+
   _handleEntity(id, hass) {
     const hassState = hass.states[id];
     if (!hassState) return;
 
     const hassEntity = hass.entities[id];
     if (!hassEntity) return;
+
+    if (id.startsWith('image.')) {
+      if (hassEntity.translation_key === TranslationKeys.PLANT_IMAGE_USER) {
+        this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER] = hassState.entity_id;
+        return;
+      }
+      this._otherEntityIds[SensorTypes.PLANT_IMAGE_DEFAULT] = hassState.entity_id;
+      return;
+    }
 
     if (id.startsWith(EntityType.IMAGE)) {
       this._plantImage = hass.states[id].attributes.entity_picture;
@@ -882,7 +932,7 @@ class FytaPlantCard extends LitElement {
     content.innerHTML = `
       <div class="header">
         <div id="plant-image">
-          <img src="${this._plantImage}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">
+          <img src="${this._getPlantImageSrc(hass)}"${this.config.state_color_plant === PlantStateColorState.IMAGE ? ` class="state" style="border-color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">
         </div>
         <div id="plant-text">
           <span id="name"${this.config.state_color_plant === PlantStateColorState.NAME ? ` style="color:${this._getStateColor(SensorTypes.PLANT_STATE, hass)};"` : ''} @click="${this._click.bind(this, this._stateEntityIds[SensorTypes.PLANT_STATE])}">${this.config.title}</span>
@@ -1183,6 +1233,11 @@ class FytaPlantCard extends LitElement {
     if (imageElement) {
       if (this.config.state_color_plant === PlantStateColorState.IMAGE) {
         imageElement.style.borderColor = this._getStateColor(SensorTypes.PLANT_STATE, hass);
+      }
+
+      const plantImageSrc = this._getPlantImageSrc(hass);
+      if (imageElement.src !== plantImageSrc) {
+        imageElement.src = plantImageSrc;
       }
     }
 
@@ -1515,6 +1570,9 @@ export class FytaPlantCardEditor extends LitElement {
       }
       .item .item-label {
         flex-grow: 1;
+      }
+      .sensors {
+        margin-bottom: 12px;
       }
     `;
   }

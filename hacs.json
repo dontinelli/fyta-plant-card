@@ -1,5 +1,5 @@
 {
-    "name": "Fyta Plant Card",
-    "filename": "fyta-plant-card.js",
-    "homeassistant": "2025.1.0"
-  }
+  "name": "FYTA Plant Card",
+  "filename": "fyta-plant-card.js",
+  "homeassistant": "2025.6.0"
+}
