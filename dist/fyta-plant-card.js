@@ -1571,6 +1571,9 @@ export class FytaPlantCardEditor extends LitElement {
       .item .item-label {
         flex-grow: 1;
       }
+      .sensors {
+        margin-bottom: 12px;
+      }
     `;
   }
 
