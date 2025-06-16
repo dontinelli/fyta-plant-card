@@ -1171,7 +1171,7 @@ class FytaPlantCard extends LitElement {
       </div>
       <div class="sensor-column">
         ${join(
-          map(leftColumnItems, (sensor) => renderSensor(sensor)),
+          map(rightColumnItems, (sensor) => renderSensor(sensor)),
           ''
         )}
       </div>
