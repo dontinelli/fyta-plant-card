@@ -1024,26 +1024,26 @@ class FytaPlantCard extends LitElement {
   }
 
   _buildNutritionTooltipContent(statusState, daysUntilFertilization, lastFertilizationDateString, nextFertilizationDateString) {
-    const tooltipContentLine1 = `Nutrition Status: ${statusState.replace(/_/g, ' ')}`;
-    let tooltipContentLine2 = '';
-    let tooltipContentLine3 = '';
+    const nutritionStatus = statusState.replace(/_/g, ' ');
+    const showFertilization = daysUntilFertilization !== null && !isNaN(daysUntilFertilization);
 
-    if (daysUntilFertilization !== null && !isNaN(daysUntilFertilization)) {
+    let fertilizationLine = nothing;
+    if (showFertilization) {
       const daysText = Math.abs(daysUntilFertilization) === 1 ? 'day' : 'days';
-      if (daysUntilFertilization >= 0) {
-        tooltipContentLine2 = `Fertilize in ${daysUntilFertilization} ${daysText}`;
-      } else {
-        tooltipContentLine2 = `Fertilization overdue by ${Math.abs(daysUntilFertilization)} ${daysText}`;
-      }
-
-      if (lastFertilizationDateString) {
-        tooltipContentLine3 = `Last Fertilization: ${this._formatDateForDisplay(lastFertilizationDateString)}`;
-      } else if (nextFertilizationDateString) {
-        tooltipContentLine3 = `Next Fertilization: ${this._formatDateForDisplay(nextFertilizationDateString)}`;
-      }
+      fertilizationLine = daysUntilFertilization >= 0
+        ? html`<br>Fertilize in ${daysUntilFertilization} ${daysText}`
+        : html`<br>Fertilization overdue by ${Math.abs(daysUntilFertilization)} ${daysText}`;
     }
 
-    return html`${tooltipContentLine1}${tooltipContentLine2 ? html`<br>${tooltipContentLine2}`: nothing}${tooltipContentLine3 ? html`<br>${tooltipContentLine3}` : nothing}`;
+    const lastFertilizationLine = lastFertilizationDateString
+      ? html`<br>Last Fertilization: ${this._formatDateForDisplay(lastFertilizationDateString)}`
+      : nothing;
+
+    const nextFertilizationLine = nextFertilizationDateString
+      ? html`<br>Next Fertilization: ${this._formatDateForDisplay(nextFertilizationDateString)}`
+      : nothing;
+
+    return html`Nutrition Status: ${nutritionStatus}${fertilizationLine}${lastFertilizationLine}${nextFertilizationLine}`;
   }
 
   _renderSensors(hass) {
