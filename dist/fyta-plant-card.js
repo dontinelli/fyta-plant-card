@@ -1038,8 +1038,7 @@ class FytaPlantCard extends LitElement {
 
       if (lastFertilizationDateString) {
         tooltipContentLine3 = `Last Fertilization: ${this._formatDateForDisplay(lastFertilizationDateString)}`;
-      }
-      if (nextFertilizationDateString) {
+      } else if (nextFertilizationDateString) {
         tooltipContentLine3 = `Next Fertilization: ${this._formatDateForDisplay(nextFertilizationDateString)}`;
       }
     }
