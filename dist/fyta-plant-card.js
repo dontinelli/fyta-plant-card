@@ -9,6 +9,12 @@ import { map } from "https://unpkg.com/lit-html@3.3.0/directives/map.js?module";
 
 const CUSTOM_CARD_NAME = 'fyta-plant-card';
 
+const DecimalsState = {
+  UNTOUCHED: false,
+  ZERO: 0,
+  ONE: 1,
+};
+
 const DeviceClass = {
   BATTERY: 'battery',
   MOISTURE: 'moisture',
@@ -105,6 +111,7 @@ const TranslationKeys = {
 
 const DEFAULT_CONFIG = {
   battery_threshold: 30,
+  decimals: DecimalsState.UNTOUCHED,
   device_id: '',
   display_mode: DisplayMode.FULL,
   sensors: [
@@ -255,6 +262,21 @@ const SCHEMA_PART_TWO = [
         default: DEFAULT_CONFIG.state_color_icon,
       },
     ],
+  },
+  {
+    name: 'decimals',
+    label: 'Sensor reading decimals',
+    selector: {
+      select: {
+        mode: 'dropdown',
+        options: [
+          { label: 'Unchanged', value: DecimalsState.UNTOUCHED },
+          { label: '0', value: DecimalsState.ZERO },
+          { label: '1', value: DecimalsState.ONE },
+        ],
+      },
+    },
+    default: DEFAULT_CONFIG.decimals,
   },
 ];
 
@@ -498,6 +520,21 @@ class FytaPlantCard extends LitElement {
     if (!unit) return '';
     const parts = unit.split('/');
     return parts[0];
+  }
+
+  _formatDecimals(value, decimals = 0) {
+    const numberValue = Number(value);
+    return isNaN(numberValue) ? '' : numberValue.toFixed(decimals);
+  }
+
+  _formatSensorValue(sensorEntity, configDecimals) {
+    const sensorValue = sensorEntity.state;
+    if (configDecimals !== false) {
+      return this._formatDecimals(sensorValue, configDecimals);
+    }
+
+    const entityPrecision = sensorEntity.display_precision;
+    return isNaN(entityPrecision) ? sensorValue : this._formatDecimals(sensorValue, entityPrecision);
   }
 
   _getPlantImageSrc(hass) {
@@ -924,14 +961,14 @@ class FytaPlantCard extends LitElement {
     }
 
     const entityId = this._measurementEntityIds[SensorTypes.BATTERY];
-    const state = parseInt(hass.states[entityId].state);
+    const batteryLevel = parseInt(hass.states[entityId].state);
 
     // Check against the user-configured threshold
     const threshold = this.config?.battery_threshold ?? DEFAULT_CONFIG.battery_threshold;
 
     // Only show battery if level is at or below the threshold
     // Skip showing if threshold is 0 (never show)
-    if (threshold === 0 || state > threshold) {
+    if (threshold === 0 || batteryLevel > threshold) {
       return '';
     }
 
@@ -960,19 +997,19 @@ class FytaPlantCard extends LitElement {
       { threshold: -Infinity, icon: 'mdi:battery-alert-variant-outline', color: 'var(--state-sensor-battery-low-color, #f44336)', statusText: BatteryStatusText.UNKNOWN },
     ];
 
-    const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => state >= threshold) || { icon: 'mdi:battery-alert-variant-outline', color: 'var(--red-color, #f44336)', statusText: BatteryStatusText.UNKNOWN };
+    const { icon, color, statusText } = thresholdLevels.find(({ threshold }) => batteryLevel >= threshold) || { icon: 'mdi:battery-alert-variant-outline', color: 'var(--red-color, #f44336)', statusText: BatteryStatusText.UNKNOWN };
 
     return html`
       <div id="plant-battery">
         <div class="battery tooltip" @click="${this._click.bind(this, entityId)}">
-          <div class="tip" style="text-align:center;">Battery: ${state}%<br>Status: ${statusText}</div>
+          <div class="tip" style="text-align:center;">Battery: ${batteryLevel}%<br>Status: ${statusText}</div>
           <ha-icon icon="${icon}" style="${this.config.state_color_battery ? `color: ${color};` : ''}"></ha-icon>
         </div>
       </div>
     `;
   }
 
-  _calculateMeterState(sensorSettings, sensorState, statusState) {
+  _calculateMeterState(sensorSettings, sensorEntity, statusState) {
     const MeterClass = {
       BAD: 'bad',
       GOOD: 'good',
@@ -980,9 +1017,10 @@ class FytaPlantCard extends LitElement {
       WARNING: 'warning',
     };
 
+    const sensorValue = sensorEntity !== null ? sensorEntity.state : null;
     let percentage = null;
-    if (sensorState !== null && sensorSettings.min !== null && sensorSettings.max != null) {
-      const calculatedPercentage = (sensorState - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
+    if (sensorValue !== null && sensorSettings.min !== null && sensorSettings.max != null) {
+      const calculatedPercentage = (sensorValue - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
       percentage = Math.max(0, Math.min(100, calculatedPercentage));
     }
 
@@ -1082,28 +1120,30 @@ class FytaPlantCard extends LitElement {
         return renderNutrition();
       }
 
+      const sensorSettings = SENSOR_SETTINGS[sensorType];
       const sensorEntityId = this._measurementEntityIds[sensorType];
-      const sensorState = hass.states[sensorEntityId].state;
+      const sensorEntity = hass.states[sensorEntityId];
+
+      const formattedSensorValue = this._formatSensorValue(sensorEntity, this.config.decimals);
 
       // Get proper units for display and tooltip
       const unitOfMeasurement = hass.states[sensorEntityId].attributes.unit_of_measurement || '';
 
       // Get the proper status entity
-      let statusState = '';
+      let sensorStatus = '';
 
       const statusEntityId = this._stateEntityIds[sensorType];
       if (statusEntityId) {
-        statusState = hass.states[statusEntityId].state;
+        sensorStatus = hass.states[statusEntityId].state;
       }
 
       const color = this._getStateColor(sensorType, hass);
-      const sensorSettings = SENSOR_SETTINGS[sensorType];
 
       // Calculate meter width and class based on status
-      const meterState = this._calculateMeterState(sensorSettings, sensorState, statusState);
+      const meterState = this._calculateMeterState(sensorSettings, sensorEntity, sensorStatus);
 
       // Generate tooltip content with current value and status - use full unit
-      const tooltipContent = html`${sensorSettings.name}: ${sensorState} ${unitOfMeasurement}${statusState ? html`<br>Status: ${statusState.replace(/_/g, ' ')}` : nothing}`;
+      const tooltipContent = html`${sensorSettings.name}: ${formattedSensorValue} ${unitOfMeasurement}${sensorStatus ? html`<br>Status: ${sensorStatus.replace(/_/g, ' ')}` : nothing}`;
 
       return html`
         <div class="attribute tooltip" @click="${this._click.bind(this, sensorEntityId)}" data-entity="${sensorEntityId}">
@@ -1112,7 +1152,7 @@ class FytaPlantCard extends LitElement {
           <div class="meter">
             <span class="${this.config.state_color_sensor ? `${meterState.class}` : ''}" style="width: ${meterState.percentage}%;"></span>
           </div>
-          <div class="sensor-value">${sensorState}</div>
+          <div class="sensor-value">${formattedSensorValue}</div>
           <div class="uom">${this._formatDisplayUnit(unitOfMeasurement)}</div>
         </div>
       `;
@@ -1121,7 +1161,7 @@ class FytaPlantCard extends LitElement {
     // Render nutrition status
     const renderNutrition = () => {
       const statusEntityId = this._stateEntityIds[SensorTypes.NUTRIENTS_STATE];
-      const statusState = hass.states[statusEntityId]?.state;
+      const sensorState = hass.states[statusEntityId]?.state;
       const color = this._getStateColor(SensorTypes.NUTRIENTS_STATE, hass);
 
       // Get fertilizations date if available
@@ -1141,10 +1181,10 @@ class FytaPlantCard extends LitElement {
       }
 
       // Format the next fertilization date for display
-      const meterState = this._calculateMeterState(SENSOR_SETTINGS[SensorTypes.NUTRIENTS], null, statusState);
+      const meterState = this._calculateMeterState(SENSOR_SETTINGS[SensorTypes.NUTRIENTS], null, sensorState);
 
       // Build tooltip content
-      const tooltipContent = this._buildNutritionTooltipContent(statusState, daysUntilFertilization, lastFertilizationDateString, nextFertilizationDateString);
+      const tooltipContent = this._buildNutritionTooltipContent(sensorState, daysUntilFertilization, lastFertilizationDateString, nextFertilizationDateString);
       const sensorValue = daysUntilFertilization !== null && !isNaN(daysUntilFertilization) ? daysUntilFertilization : '-';
 
       return html`
