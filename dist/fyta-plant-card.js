@@ -527,6 +527,16 @@ class FytaPlantCard extends LitElement {
     return isNaN(numberValue) ? '' : numberValue.toFixed(decimals);
   }
 
+  _formatSensorValue(sensorEntity, configDecimals) {
+    const sensorValue = sensorEntity.state;
+    if (configDecimals !== false) {
+      return this._formatDecimals(sensorValue, configDecimals);
+    }
+
+    const entityPrecision = sensorEntity.display_precision;
+    return isNaN(entityPrecision) ? sensorValue : this._formatDecimals(sensorValue, entityPrecision);
+  }
+
   _getPlantImageSrc(hass) {
     if (this.config.preferred_image === PreferredPlantImage.USER) {
       const userImageEntityId = this._otherEntityIds[SensorTypes.PLANT_IMAGE_USER];
@@ -999,7 +1009,7 @@ class FytaPlantCard extends LitElement {
     `;
   }
 
-  _calculateMeterState(sensorSettings, sensorState, statusState) {
+  _calculateMeterState(sensorSettings, sensorEntity, statusState) {
     const MeterClass = {
       BAD: 'bad',
       GOOD: 'good',
@@ -1007,9 +1017,10 @@ class FytaPlantCard extends LitElement {
       WARNING: 'warning',
     };
 
+    const sensorValue = sensorEntity !== null ? sensorEntity.state : null;
     let percentage = null;
-    if (sensorState !== null && sensorSettings.min !== null && sensorSettings.max != null) {
-      const calculatedPercentage = (sensorState - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
+    if (sensorValue !== null && sensorSettings.min !== null && sensorSettings.max != null) {
+      const calculatedPercentage = (sensorValue - sensorSettings.min) / (sensorSettings.max - sensorSettings.min) * 100;
       percentage = Math.max(0, Math.min(100, calculatedPercentage));
     }
 
@@ -1111,8 +1122,9 @@ class FytaPlantCard extends LitElement {
 
       const sensorSettings = SENSOR_SETTINGS[sensorType];
       const sensorEntityId = this._measurementEntityIds[sensorType];
-      const sensorValue = hass.states[sensorEntityId].state;
-      const formattedSensorValue = this.config.decimals === false ? sensorValue : this._formatDecimals(sensorValue, this.config.decimals);
+      const sensorEntity = hass.states[sensorEntityId];
+
+      const formattedSensorValue = this._formatSensorValue(sensorEntity, this.config.decimals);
 
       // Get proper units for display and tooltip
       const unitOfMeasurement = hass.states[sensorEntityId].attributes.unit_of_measurement || '';
@@ -1128,7 +1140,7 @@ class FytaPlantCard extends LitElement {
       const color = this._getStateColor(sensorType, hass);
 
       // Calculate meter width and class based on status
-      const meterState = this._calculateMeterState(sensorSettings, sensorValue, sensorStatus);
+      const meterState = this._calculateMeterState(sensorSettings, sensorEntity, sensorStatus);
 
       // Generate tooltip content with current value and status - use full unit
       const tooltipContent = html`${sensorSettings.name}: ${formattedSensorValue} ${unitOfMeasurement}${sensorStatus ? html`<br>Status: ${sensorStatus.replace(/_/g, ' ')}` : nothing}`;
